@@ -640,7 +640,7 @@ def create_figure_test_cases() -> Iterator[
         "__[example](#idx0)__, __[example-alias](#idx1)__, "
         "__[example-see](#idx2)__, __[example-also](#idx3)__.",
         entries,
-        "Ignoring suffix/locator emphasis in cross-reference: "
+        "Ignoring suffix/locator emphasis in cross reference: "
         "'__example__{^foo>\"* text\"#demo |bar;+baz>fiz [whiz] ~z !}'",
     )
 
