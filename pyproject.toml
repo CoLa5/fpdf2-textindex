@@ -54,6 +54,7 @@ target-version = "py312"
 fix = true
 
 [tool.ruff.lint]
+preview = true
 select = [
   # flake8-annotations
   "ANN",
