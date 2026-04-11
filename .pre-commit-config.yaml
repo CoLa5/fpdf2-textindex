@@ -1,0 +1,80 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [pre-commit, pre-push]
+default_language_version:
+  python: python3.12
+repos:
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-executables-have-shebangs
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-toml
+      - id: debug-statements
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: name-tests-test
+      - id: no-commit-to-branch
+        args: [--branch, main]
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.10.0
+    hooks:
+      - id: commitizen
+      - id: commitizen-branch
+        stages: [pre-push]
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.8.12
+    hooks:
+      - id: uv-lock
+      - id: uv-export
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.10
+    hooks:
+      # Linter
+      - id: ruff-check
+        types_or: [python, pyi, pyproject]
+        args: [--fix]
+      # Formatter
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.45.0
+    hooks:
+      - id: typos
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.20.0"
+    hooks:
+      - id: mypy
+        args:
+          - --config-file=./pyproject.toml
+        files: ^fpdf2_textindex/.*\.py$
+        additional_dependencies:
+          - fpdf2
+
+  - repo: local
+    hooks:
+      - id: no-print-in-sources
+        name: Ensure no print() statement appears in fpdf2_textindex sources
+        language: pygrep
+        entry: print\(
+        files: ^fpdf2_textindex/.*\.py$
+        # exclude: fpdf/util.py
+      - id: no-generate-true
+        name: Ensure no generate=True is left in a call to assert_pdf_equal()
+        language: pygrep
+        entry: generate=True
+        files: ^test/.*\.py$
