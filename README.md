@@ -1,2 +1,5 @@
-# fpdf2-textindex
-Adds a textindex-functionality to [fpdf2](https://github.com/py-pdf/fpdf2)
+# fpdf2 TextIndex
+
+Adds a **text index** to [fpdf2](https://github.com/py-pdf/fpdf2), based on the
+documentation and source code of
+[Math Gemmell's TextIndex](https://mattgemmell.scot/textindex/).
