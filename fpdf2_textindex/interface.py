@@ -114,7 +114,7 @@ class Node(_LabelPathABC):
         type(self)._next_id += 1
 
         if self.parent is not None:
-            self.parent.add_child(self)
+            self.parent.add_child(self)  # type: ignore[arg-type]
 
     def __bool__(self) -> bool:
         return True
@@ -192,7 +192,7 @@ class Node(_LabelPathABC):
             The children.
         """
         for child in self.children:
-            yield from iter(child)
+            yield from iter(child)  # type: ignore[misc]
 
     def iter_parents(self) -> Iterator[Self]:
         """Iterates over the parents without the root (going up).
