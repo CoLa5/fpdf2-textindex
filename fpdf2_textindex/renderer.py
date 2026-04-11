@@ -19,7 +19,15 @@ from fpdf2_textindex.pdf import FPDF
 from fpdf2_textindex.utils import md_link
 
 
-def _collect_index_links(pdf: fpdf.FPDF) -> dict[str, LinkLocation]:
+def collect_index_links(pdf: fpdf.FPDF) -> dict[str, LinkLocation]:
+    """Collects all index links from a pdf.
+
+    Args:
+        pdf: The :py:class:`fpdf.FPDF`-instance to collect links from.
+
+    Returns:
+        A dictionary of link name and its location.
+    """
     link_locs = {}
     for page_num, pdf_page in pdf.pages.items():
         if pdf_page.annots is None:
@@ -195,7 +203,7 @@ class TextIndexRenderer:
             LOGGER.warning("No entries defined")
             return
 
-        self._link_locations = _collect_index_links(pdf)
+        self._link_locations = collect_index_links(pdf)
 
         max_depth = max(e.depth for e in entries)
         if max_depth > 2:
