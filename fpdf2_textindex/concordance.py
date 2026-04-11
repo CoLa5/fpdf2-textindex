@@ -36,22 +36,14 @@ class ConcordanceList(Sequence[tuple[str, str]]):
         self._concordance = tuple(concordance)
 
     @overload
-    def __getitem__(
-        self,
-        index: int,
-        /,
-    ) -> tuple[str, str]: ...
+    def __getitem__(self, index: int, /) -> tuple[str, str]: ...
 
     @overload
-    def __getitem__(
-        self,
-        index: slice[int | None, int | None, int | None],
-        /,
-    ) -> Sequence[tuple[str, str]]: ...
+    def __getitem__(self, index: slice, /) -> Sequence[tuple[str, str]]: ...
 
     def __getitem__(
         self,
-        index: slice[int | None, int | None, int | None] | int,
+        index: slice | int,
     ) -> Sequence[tuple[str, str]] | tuple[str, str]:
         return self._concordance[index]
 
