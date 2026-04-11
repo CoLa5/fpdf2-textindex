@@ -214,6 +214,14 @@ class FPDF(fpdf.FPDF):  # noqa: D101
             The preloaded text fragments.
         """
         if not self.in_toc_rendering and text and markdown:
+            # Load concordance list if not done in init
+            if (
+                self.CONCORDANCE_FILE is not None
+                and self._concordance_list is None
+            ):
+                self._concordance_list = ConcordanceList.from_file(
+                    self.CONCORDANCE_FILE
+                )
             # Replace concordance entries by entry annotations
             if self._concordance_list:
                 text = self._concordance_list.parse_text(text)
