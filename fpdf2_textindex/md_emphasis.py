@@ -75,6 +75,10 @@ class MDEmphasis(enum.IntFlag):
         Returns:
             The "inner", unformatted text and the corresponding
             :py:class:`MDEmphasis`.
+
+        Raises:
+            ValueError: If the end emphasis does not correspond to the mirrored
+                start emphasis.
         """
         label_emphasis = MDEmphasis.NONE
         match = cls.MD_PATTERN.match(text)

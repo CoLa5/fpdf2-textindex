@@ -41,6 +41,9 @@ class AliasRegistry(Mapping[str, Alias]):
         Args:
             name: The name of the alias.
             label_path: The label path the alias will be replaced by.
+
+        Raises:
+            ValueError: If the label path is empty.
         """
         label_path = tuple(label_path)
         if len(label_path) == 0:

@@ -164,6 +164,9 @@ class Node(_LabelPathABC):
 
         Args:
             child: The child to add.
+
+        Raises:
+            ValueError: If there is already a child with the same label.
         """
         if self.get_child(child.label) is not None:
             msg = "cannot add second child with same label"
@@ -373,6 +376,9 @@ class TextIndexEntry(Node):
             end_id: The end id of the latest reference.
             end_suffix: The end suffix of the latest reference. Defaults to
                 ``None``.
+
+        Raises:
+            RuntimeError: If there has been no reference before.
         """
         if len(self.references) == 0:
             msg = "cannot update latest reference end without reference"

@@ -157,7 +157,7 @@ class TextIndexParser:
                 - If ``strict=True`` and and adding a SEE-cross reference to
                     an entry with former "normal" reference (locator) or
                     viceversa.
-        """
+        """  # noqa: DOC502
         LOGGER.info("Parsing text by index parser")
 
         former_len = len(self)

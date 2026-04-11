@@ -150,7 +150,7 @@ class TextIndexRenderer:
                 given text style. Defaults to ``None``, meaning to use an empty
                 text style and thus the last used one before rendering the text
                 index.
-        """
+        """  # noqa: DOC501
         self.border = border
         self.ignore_same_page_refs = bool(ignore_same_page_refs)
         self.level_indent = 0.0 if level_indent is None else float(level_indent)
@@ -195,7 +195,7 @@ class TextIndexRenderer:
         Raises:
             ValueError: If a textstyle has a :py:class:`fpdf.Align`-value as
                 left margin.
-        """
+        """  # noqa: DOC502
         assert pdf.index_placeholder is not None
 
         LOGGER.info("Rendering text index")
@@ -705,7 +705,6 @@ class TextIndexRenderer:
                 len(refs),
             )
 
-        # TODO: merge pages if consecutive references end up on same page
         self._last_page = -1
         for i, ref in enumerate(refs):
             # Render page of start id

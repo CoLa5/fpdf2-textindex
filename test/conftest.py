@@ -35,14 +35,14 @@ def assert_pdf_equal(
     A hash-based comparison logic is used as a fallback.
 
     Args:
-        actual: instance of `FPDF` or `Template`. The `output` or `render`
+        pdf: Instance of :py:class:`fpdf.FPDF`. The :py:meth:`fpdf.FPDF.output`-
             method will be called on it.
-        expected: instance of `FPDF`, `bytearray` or file path to a PDF file
-            matching the expected output
-        tmp_path (Path): temporary directory provided by pytest individually to
-            the caller test function
-        generate (bool): only generate `pdf` output to
-            `rel_expected_pdf_filepath` and return. Useful to create new tests.
+        expected: Instance of :py:class:`fpdf.FPDF`, ``bytearray`` or file path
+            to a PDF file matching the expected output.
+        tmp_path: Temporary directory provided by :py:mod:`pytest` individually
+            to the caller test function.
+        generate: Only generate PDF-output to `rel_expected_pdf_filepath` and
+            return. Useful to create new tests.
     """
     if at_epoch:
         pdf.creation_date = EPOCH

@@ -198,11 +198,20 @@ class FPDF(fpdf.FPDF):  # noqa: D101
         text: str | None,
         markdown: bool,
     ) -> Sequence[Fragment]:
-        """When Markdown styling is enabled, we require secondary fonts to
+        """Preloads the font styles by markdown parsing.
+
+        When Markdown styling is enabled, we require secondary fonts to
         render text in bold & italics. This function ensure that those fonts are
         available. It needs to perform Markdown parsing, so we return the
         resulting `styled_txt_frags` tuple to avoid repeating this processing
         later on.
+
+        Args:
+            text: The text to parse the markdown of.
+            markdown: Whether markdown is enabled.
+
+        Returns:
+            The preloaded text fragments.
         """
         if not self.in_toc_rendering and text and markdown:
             # Replace concordance entries by entry annotations
@@ -278,8 +287,7 @@ class FPDF(fpdf.FPDF):  # noqa: D101
                 Text Index. Defaults to ``True``.
 
         Raises:
-            :py:class:`fpdf.errors.FPDFException`: If an index placeholder has
-                been inserted before.
+            FPDFException: If an index placeholder has been inserted before.
             TypeError: If ``render_index_function`` is not callable.
             ValueError: If ``pages`` is less than ``1``.
         """
@@ -422,7 +430,11 @@ class FPDF(fpdf.FPDF):  # noqa: D101
         Returns:
             A single value or a tuple, depending on the ``output`` parameter
             value.
-        """
+
+        Raises:
+            FPDFException: If no font has been set before.
+            ValueError: If ``w`` or ``h`` is a string.
+        """  # noqa: DOC102
         padding = Padding.new(padding)
         wrapmode = WrapMode.coerce(wrapmode)
 
@@ -732,7 +744,7 @@ class FPDF(fpdf.FPDF):  # noqa: D101
         *,
         linearize: bool = False,
         output_producer_class: type[OutputProducer] = OutputProducer,
-    ) -> None | bytearray:
+    ) -> bytearray | None:
         """Output PDF to some destination.
 
         The method first calls [close](close.md) if necessary to terminate the
@@ -747,6 +759,15 @@ class FPDF(fpdf.FPDF):  # noqa: D101
                 under.
             output_producer_class (class): use a custom class for PDF file
                 generation.
+
+        Returns:
+            If a `name` is given, the PDF will be written to a new file and
+            ``None`` will be returned. Else, a bytearray buffer is returned,
+            compirsing the PDF.
+
+        Raises:
+            PDFAComplianceError: If the compliance requires at least one
+                embedded file.
         """
         # Clear cache of cached functions to free up memory after output
         get_unicode_script.cache_clear()
