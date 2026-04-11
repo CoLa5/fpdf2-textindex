@@ -91,7 +91,7 @@ class LinkLocation:
     """Link Location."""
 
     name: str
-    page: str
+    page: int
     x: float
     y: float
     w: float
@@ -289,14 +289,14 @@ class TextIndexEntry(Node):
         if self.references and cross_ref_type == CrossReferenceType.SEE:
             if strict:
                 msg = (
-                    f"cannot add a SEE cross-reference to entry "
+                    f"cannot add a SEE cross reference to entry "
                     f"{self.joined_label_path!r} with former reference "
                     f"(locator)"
                 )
                 raise ValueError(msg)
             LOGGER.warning(
-                "Adding a SEE cross-reference to entry %r with former "
-                "reference (locator); cross-reference will be converted to SEE "
+                "Adding a SEE cross reference to entry %r with former "
+                "reference (locator); cross reference will be converted to SEE "
                 "SEE",
                 self.joined_label_path,
             )
@@ -341,12 +341,12 @@ class TextIndexEntry(Node):
                 msg = (
                     f"cannot add a reference (locator) to entry "
                     f"{self.joined_label_path!r} with former SEE "
-                    f"cross-reference"
+                    f"cross reference"
                 )
                 raise ValueError(msg)
             LOGGER.warning(
                 "Adding a reference (locator) to entry %r with former SEE "
-                "cross-reference(s); cross-reference(s) will be converted to "
+                "cross reference(s); cross reference(s) will be converted to "
                 "SEE ALSO",
                 self.joined_label_path,
             )

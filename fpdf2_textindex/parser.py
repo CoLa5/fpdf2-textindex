@@ -296,7 +296,7 @@ class TextIndexParser:
                 ref = ref[len(const.ALSO_MARKER) :]
             elif not inbound:
                 # Do not create a (page-) reference for this mark's entry if
-                # there is a (non-also) cross-reference.
+                # there is a (non-also) cross reference.
                 create_ref = False
 
             # Split reference label path
@@ -310,7 +310,7 @@ class TextIndexParser:
                 if TYPE_CHECKING:
                     assert isinstance(source_entry, TextIndexEntry)
                 LOGGER.debug(
-                    "\tCreating inbound %s cross-reference from entry %r (%s)",
+                    "\tCreating inbound %s cross reference from entry %r (%s)",
                     ref_type.upper(),
                     ref_label_path[-1],
                     f"Path: {source_entry.joined_label_path!r:s}"
@@ -330,7 +330,7 @@ class TextIndexParser:
 
         params = remove_match_from_str(params, cross_match)
         if len(cross_references) > 0:
-            LOGGER.debug("\tCross-references: %r", cross_references)
+            LOGGER.debug("\tCross references: %r", cross_references)
         return params, create_ref, cross_references
 
     def _parse_final_marker(self, params: str) -> tuple[str, bool, bool]:
@@ -607,7 +607,7 @@ class TextIndexParser:
             )
         elif suffix or locator_emphasis:
             LOGGER.warning(
-                "Ignoring suffix/locator emphasis in cross-reference: %r",
+                "Ignoring suffix/locator emphasis in cross reference: %r",
                 directive,
             )
 
@@ -626,7 +626,7 @@ class TextIndexParser:
         if len(cross_references) > 0:
             if existed:
                 LOGGER.debug(
-                    "\tAdding cross-references to existing entry %r",
+                    "\tAdding cross references to existing entry %r",
                     entry.joined_label_path,
                 )
             for ref_type, ref_label_path in cross_references:
