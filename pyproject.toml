@@ -1,0 +1,127 @@
+[build-system]
+requires = ["uv_build>=0.8.12,<0.9.0"]
+build-backend = "uv_build"
+
+[project]
+name = "fpdf2-textindex"
+version = "0.0.1"
+description = "Text Index for fpdf2"
+readme = "README.md"
+authors = [
+    { name = "Corvin Lasogga", email = "c.lasogga@gmail.com" }
+]
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = [
+    "fpdf2",
+]
+keywords = ["pdf", "library", "markdown", "index", "textindex"]
+
+classifiers = [
+  "Intended Audience :: Developers",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent",
+  "Topic :: Printing",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Text Processing :: Markup",
+  "Topic :: Multimedia :: Graphics",
+  "Topic :: Multimedia :: Graphics :: Presentation"
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "pep440"
+version_provider = "uv"
+update_changelog_on_bump = true
+major_version_zero = true
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[tool.ruff]
+line-length = 80
+indent-width = 4
+target-version = "py312"
+fix = true
+
+[tool.ruff.lint]
+select = [
+  # flake8-annotations
+  "ANN",
+  # pydocstyle
+  "D",
+  # pydoclint
+  "DOC",
+  # pycodestyle
+  "E",
+  # Pyflakes
+  "F",
+  # flake8-future-annotations
+  "FA",
+  # flake8-fixme
+  "FIX",
+  # flake8-logging-format
+  "G",
+  # flake8-logging
+  "LOG",
+  # pyupgrade
+  "UP",
+  # flake8-bugbear
+  "B",
+  # flake8-simplify
+  "SIM",
+  # isort
+  "I",
+  # Ruff-specific rules
+  "RUF"
+]
+extend-ignore = [
+    # missing docstring in magic method
+    "D105",
+    # missing docstring in __init__
+    "D107",
+    # missing blank line after summary
+    "D205",
+]
+fixable = ["ALL"]
+unfixable = []
+
+# Source: https://github.com/PyCQA/isort/blob/main/isort/profiles.py#L22
+[tool.ruff.lint.isort]
+case-sensitive = true
+force-single-line = true
+force-sort-within-sections = true
+# lexicographical = true
+single-line-exclusions = ["collections.abc", "typing", "typing_extensions"]
+order-by-type = false
+# group-by-package = true
+
+[tool.ruff.lint.per-file-ignores]
+"test/**" = ["D"]  # Do not require docstrings in tests
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+[tool.uv.build-backend]
+module-name = "fpdf2_textindex"
+module-root = ""
+
+[tool.uv.sources]
+fpdf2 = { git = "https://github.com/CoLa5/fpdf2", rev = "dev" }
