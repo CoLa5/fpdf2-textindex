@@ -84,14 +84,14 @@ class TextIndexParser:
         return f"{type(self).__name__:s}({len(self):d} entries)"
 
     @property
-    def aliases(self) -> tuple[Alias, ...]:
+    def aliases(self) -> list[Alias]:
         """The parsed aliases."""
-        return tuple(self._alias_reg.values())
+        return list(self._alias_reg.values())
 
     @property
-    def entries(self) -> tuple[TextIndexEntry, ...]:
+    def entries(self) -> list[TextIndexEntry]:
         """The parsed entries."""
-        return tuple(iter(self))
+        return list(iter(self))
 
     @property
     def last_directive_id(self) -> int:
