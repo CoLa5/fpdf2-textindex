@@ -1,0 +1,5 @@
+=iPad|iPhone|Mac					"Apple platforms"
+(single-|double-)?tap(s|ped|ping)?	tap
+config(uration)?s?\b				|firmware
+simultaneous(ly)?					|combo;+chord
+layers?								toggle>layer
