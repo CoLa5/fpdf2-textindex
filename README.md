@@ -20,8 +20,7 @@ pdf.output("text_index.pdf")
 
 Use the **Text Index**-syntax to define index marks in a text:
 
-> Most mechanical keyboard firmware{^} supports the use of [key
-> combinations]{^}.
+> Most mechanical keyboard firmware{^} supports the use of [key combinations]{^}
 
 Print it in the PDF by enabling markdown in `FPDF.cell(...)` or
 `FPDF.multi_cell(...)`:
@@ -31,7 +30,8 @@ pdf = FPDF()
 pdf.add_page()
 pdf.set_font('helvetica', size=12)
 pdf.cell(
-  text="Most mechanical keyboard firmware{^} supports the use of [key combinations]{^}.", markdown=True,
+  text="Most mechanical keyboard firmware{^} supports the use of [key combinations]{^}",
+  markdown=True,
 )
 ...
 ```
@@ -43,9 +43,14 @@ The only difference to this documentation is the adaption of the emphasis to the
 which results in:
 
 > This entry will be **\*\*emphasised\*\***{^} in the index. This expanded entry
-> will be **\*\*[not emphasised]{^"\* (nope)"}\*\***.
+> will be **\*\*[not emphasised]{^"\* (nope)"}\*\*** in the index but here.
 
-Also, the marks for italics, underline and strikethrough are supported.
+and will be printed in the PDF as:
+
+> This entry will be **emphasised** in the index. This expanded entry will be
+> **not emphasised** in the index but here.
+
+Similarly, the marks for italics, underline and strikethrough are supported.
 
 ## Inserting a Text Index
 
@@ -56,15 +61,15 @@ index**. A page break is triggered after inserting the text index:
 ```python3
 ...
 pdf.add_page()
-pdf.insert_index_placeholder(TextIndexRenderer().render_text_index)
+pdf.insert_index_placeholder(*render_index_function*)
 ```
 
 Parameters:
 
 - `render_index_function`: Function called to render the text index, receiving
-  two parameters: `pdf`, an `FPDF` instance, and `entries`, a list of
+  two parameters: `pdf`, an adapted `FPDF` instance, and `entries`, a list of
   `TextIndexEntry`s. A reference implementation is supported through
-  `TextIndexRenderer`.
+  `TextIndexRenderer(...).render_text_index`.
 - `pages`: The number of pages that the text index will span, including the
   current one. A page break occurs for each page specified.
 - `allow_extra_pages`: If `True`, allows unlimited additional pages to be added
@@ -79,7 +84,9 @@ numbering, use **Page Labels** to assign a specific numbering style to the index
 pages. When using Page Labels, any extra text index pages will follow the
 numbering style of the first text index page
 
-## Idea
+## Internals - Idea
+
+For the curious reader:
 
 This package adds a markdown parser to [fpdf2](https://github.com/py-pdf/fpdf2)
 that intercepts markdown-styled strings to `FPDF.cell(...)` or
@@ -88,15 +95,18 @@ that intercepts markdown-styled strings to `FPDF.cell(...)` or
 markdown-links with an unset internal PDF link as destination, while the created
 index entries are internally saved:
 
-`"example{^}"` **=** `"[example](#idx0)"` **+**
+`"example{^}"`  
+**=**  
+`"[example](#idx0)"`  
+**+**  
 `TextIndexEntry(label="example", references=[Reference(start_id=0)])`
 
-When creating the index, a `render_index_function` like in the
+When creating the actual text index in the PDF, a `render_index_function`
+similar to the
 [official TOC-implementation of fpdf2](https://py-pdf.github.io/fpdf2/DocumentOutlineAndTableOfContents.html#table-of-contents)
-is used. The `render_index_function` collects all unset internal PDF link
-annotations that are related to the text index (identified by an unique id
-schema). The annotations are collected per page and have the x/y-position on the
-page as attribute:
+is used. Before all unset internal PDF link annotations that are related to the
+text index (identified by an unique id schema) are collected per page and have
+the x/y-position on the page as attribute:
 
 `{"idx0": LinkLocation(name="idx0", page=3, x=20.0, y=40.0), ...}`
 
@@ -109,9 +119,12 @@ the reference (locator) in the index:
 `"example, 3"`
 
 The unset link annotation in the text is pointed to this entry in the index and,
-thus, is finally set. To create a connection of the index entry to the text
-page, the printed page number will point to the text page as well. So clicking
-on `"example"` on the text page will lead to corresponding index entry. Clicking
-on the reference (locator), page `"3"`, in the text index will return the reader
-to the text page. Cross-references are connected in the same way but inside of
-the text index.
+thus, is finally set.
+
+In the reference implementation, inverted links are added as well: To create a
+connection of the index entry to the text page, the printed page number will
+point to the text page as well.  
+So clicking on `"example"` on the text page will lead to corresponding entry in
+the text index. Clicking on the reference (locator) in the text index, page
+`"3"`, will return the reader to the text page. Cross-references are connected
+in the same way but inside of the text index.
