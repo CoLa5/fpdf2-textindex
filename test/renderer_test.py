@@ -7,12 +7,18 @@ from typing import Any
 import fpdf
 import pytest
 
+from fpdf2_textindex.interface import TextIndexEntry
 from fpdf2_textindex.pdf import FPDF
 from fpdf2_textindex.renderer import TextIndexRenderer
-from fpdf2_textindex.renderer import collect_index_links
 from test.conftest import DATA
 from test.conftest import assert_pdf_equal
 from test.conftest import create_figure_test_cases
+
+
+@pytest.fixture(autouse=True)
+def reset_entry_next_id() -> Iterator[None]:
+    TextIndexEntry._next_id = 0
+    yield
 
 
 def create_ref_test_cases() -> Iterator[tuple[str, str, list[str]]]:
@@ -110,34 +116,34 @@ def create_ref_test_cases() -> Iterator[tuple[str, str, list[str]]]:
 def test_renderer_prepare_ref(
     msg: str, text: str, prepared_texts: list[str]
 ) -> None:
-    pdf = FPDF()
-    pdf.set_font("Helvetica", size=12)
+    doc = FPDF()
+    doc.set_font("Helvetica", size=12)
 
     text_p = text.split("\f")
     for tp in text_p:
-        pdf.add_page()
-        pdf.multi_cell(w=0, text=tp, markdown=True)
+        doc.add_page()
+        doc.multi_cell(w=0, text=tp, markdown=True)
 
     renderer = TextIndexRenderer(run_in_style=False)
-    renderer._link_locations = collect_index_links(pdf)
+    doc._set_index_link_locations()
     new_texts = [
         t
-        for entry in pdf.index_entries
-        for _, t in renderer._prepare_entry(pdf, entry, 3)
+        for entry in doc.index_entries
+        for _, t in renderer._prepare_entry(doc, entry, 3)
         if entry.depth == 1
     ]
 
     for new_text, prepared_text in zip(new_texts, prepared_texts, strict=True):
         kw = {}
         for i in range(4):
-            if i >= len(pdf.index_entries):
+            if i >= len(doc.index_entries):
                 break
             if f"{{ent_id{i:d}:d}}" in prepared_text:
-                kw[f"ent_id{i:d}"] = pdf.index_entries[i].id
+                kw[f"ent_id{i:d}"] = doc.index_entries[i].id
         prepared_text = prepared_text.format(**kw)
         assert new_text == prepared_text, (
             msg,
-            pdf.index_entries,
+            doc.index_entries,
             "\n".join(new_texts),
         )
 
@@ -304,34 +310,34 @@ def create_see_test_cases() -> Iterator[tuple[str, str, list[str]]]:
 def test_renderer_prepare_see(
     msg: str, text: str, prepared_texts: list[str]
 ) -> None:
-    pdf = FPDF()
-    pdf.set_font("Helvetica", size=12)
+    doc = FPDF()
+    doc.set_font("Helvetica", size=12)
 
     text_p = text.split("\f")
     for tp in text_p:
-        pdf.add_page()
-        pdf.multi_cell(w=0, text=tp, markdown=True)
+        doc.add_page()
+        doc.multi_cell(w=0, text=tp, markdown=True)
 
     renderer = TextIndexRenderer(run_in_style=False)
-    renderer._link_locations = collect_index_links(pdf)
+    doc._set_index_link_locations()
     new_texts = [
         t
-        for entry in pdf.index_entries
-        for _, t in renderer._prepare_entry(pdf, entry, 3)
+        for entry in doc.index_entries
+        for _, t in renderer._prepare_entry(doc, entry, 3)
         if entry.depth == 1
     ]
 
     for new_text, prepared_text in zip(new_texts, prepared_texts, strict=True):
         kw = {}
         for i in range(4):
-            if i >= len(pdf.index_entries):
+            if i >= len(doc.index_entries):
                 break
             if f"{{ent_id{i:d}:d}}" in prepared_text:
-                kw[f"ent_id{i:d}"] = pdf.index_entries[i].id
+                kw[f"ent_id{i:d}"] = doc.index_entries[i].id
         prepared_text = prepared_text.format(**kw)
         assert new_text == prepared_text, (
             msg,
-            pdf.index_entries,
+            doc.index_entries,
             "\n".join(new_texts),
         )
 
@@ -509,39 +515,36 @@ def create_see_also_test_cases() -> Iterator[tuple[str, str, list[str]]]:
 def test_renderer_prepare_see_also(
     msg: str, text: str, prepared_texts: list[str]
 ) -> None:
-    pdf = FPDF()
-    pdf.set_font("Helvetica", size=12)
+    doc = FPDF()
+    doc.set_font("Helvetica", size=12)
 
     text_p = text.split("\f")
     for tp in text_p:
-        pdf.add_page()
-        pdf.multi_cell(w=0, text=tp, markdown=True)
+        doc.add_page()
+        doc.multi_cell(w=0, text=tp, markdown=True)
 
     renderer = TextIndexRenderer(run_in_style=False)
-    renderer._link_locations = collect_index_links(pdf)
+    doc._set_index_link_locations()
     new_texts = [
         t
-        for entry in pdf.index_entries
-        for _, t in renderer._prepare_entry(pdf, entry, 3)
+        for entry in doc.index_entries
+        for _, t in renderer._prepare_entry(doc, entry, 3)
         if entry.depth == 1
     ]
 
     for new_text, prepared_text in zip(new_texts, prepared_texts, strict=True):
         kw = {}
         for i in range(4):
-            if i >= len(pdf.index_entries):
+            if i >= len(doc.index_entries):
                 break
             if f"{{ent_id{i:d}:d}}" in prepared_text:
-                kw[f"ent_id{i:d}"] = pdf.index_entries[i].id
+                kw[f"ent_id{i:d}"] = doc.index_entries[i].id
         prepared_text = prepared_text.format(**kw)
         assert new_text == prepared_text, (
             msg,
-            pdf.index_entries,
+            doc.index_entries,
             "\n".join(new_texts),
         )
-
-
-kwargs = {"line_spacing": [None]}
 
 
 @pytest.mark.parametrize(
@@ -676,8 +679,23 @@ def test_index_placeholder_arguments(
             new_y=fpdf.YPos.NEXT,
         )
 
+    # To not have any links on last page
+    doc.add_page()
+
     key = next(iter(kw.keys())) if kw else "plain"
     assert_pdf_equal(doc, DATA / f"textindex_{key:s}.pdf", tmp_path)
+
+    # Test that all links are linked correctly
+    last_page = doc.page
+    named_destination_ids = set(id(d) for d in doc.named_destinations.values())
+    for i, d in doc.links.items():
+        # No difference between links and named destinations
+        assert id(d) in named_destination_ids, f"Link {i:d}: {d!r}"
+        assert d.page_number <= last_page, f"Link {i:d}: {d!r}"
+    for n, d in doc.named_destinations.items():
+        assert d.page_number <= last_page, f"Named Destination {n:s}: {d!r}"
+        if n.startswith("ent") or (n.startswith("idx") and not n.endswith("t")):
+            assert d.page_number in {1, 2}, f"Named Destination {n:s}: {d!r}"
 
 
 @pytest.mark.parametrize(
@@ -727,12 +745,15 @@ def test_renderer_references(
             new_y=fpdf.YPos.NEXT,
         )
         doc.ln()
-        doc.multi_cell(
-            w=0,
-            text=text,
-            markdown=True,
-            new_x=fpdf.XPos.LEFT,
-            new_y=fpdf.YPos.NEXT,
-        )
+        for i, tp in enumerate(text.split("\f")):
+            if i > 0:
+                doc.add_page()
+            doc.multi_cell(
+                w=0,
+                text=tp,
+                markdown=True,
+                new_x=fpdf.XPos.LEFT,
+                new_y=fpdf.YPos.NEXT,
+            )
 
     assert_pdf_equal(doc, DATA / f"textindex_{key:s}.pdf", tmp_path)
