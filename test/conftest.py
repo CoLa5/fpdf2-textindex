@@ -1,7 +1,10 @@
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 import datetime as dt
 import hashlib
 import pathlib
+import shutil
+import subprocess
+import warnings
 
 import fpdf
 
@@ -15,6 +18,33 @@ EPOCH: dt.datetime = dt.datetime(1969, 12, 31, 19, 00, 00).replace(
     tzinfo=dt.UTC
 )
 
+QPDF_AVAILABLE: bool = bool(shutil.which("qpdf"))
+if not QPDF_AVAILABLE:
+    warnings.warn(
+        "qpdf command not available on the $PATH, falling back to hash-based "
+        "comparisons in tests",
+        stacklevel=1,
+    )
+
+
+def _qpdf(input_pdf_filepath: pathlib.Path) -> bytes:
+    return _run_cmd(
+        "qpdf",
+        "--deterministic-id",
+        "--password=fpdf2",
+        "--qdf",
+        str(input_pdf_filepath),
+        "-",
+    )
+
+
+def _run_cmd(*args: str) -> bytes:
+    try:
+        return subprocess.check_output(args, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as error:
+        print(f"\nqpdf STDERR: {error.stderr.decode().strip()}")
+        raise
+
 
 # NOTE: Adapted from fpdf2-testing
 def assert_pdf_equal(
@@ -23,8 +53,11 @@ def assert_pdf_equal(
     tmp_path: pathlib.Path,
     *,
     at_epoch: bool = True,
-    linearize: bool = False,
     generate: bool = False,
+    ignore_id_changes: bool = False,
+    ignore_original_obj_ids: bool = False,
+    ignore_xref_offsets: bool = False,
+    linearize: bool = False,
 ) -> None:
     """This compare the output of a `FPDF` instance (or `Template` instance),
     with the provided PDF file.
@@ -69,10 +102,97 @@ def assert_pdf_equal(
     with actual_pdf_path.open("wb") as pdf_file:
         pdf.output(pdf_file, linearize=linearize)
 
-    actual_hash = hashlib.md5(actual_pdf_path.read_bytes()).hexdigest()
-    expected_hash = hashlib.md5(expected_pdf_path.read_bytes()).hexdigest()
+    if (
+        QPDF_AVAILABLE
+    ):  # Favor qpdf-based comparison, as it helps a lot debugging:
+        actual_qpdf = _qpdf(actual_pdf_path)
+        expected_qpdf = _qpdf(expected_pdf_path)
+        (tmp_path / "actual_qpdf.pdf").write_bytes(actual_qpdf)
+        (tmp_path / "expected_qpdf.pdf").write_bytes(expected_qpdf)
+        actual_lines = actual_qpdf.splitlines()
+        expected_lines = expected_qpdf.splitlines()
+        if ignore_id_changes:
+            actual_lines = filter_out_doc_id(actual_lines)
+            expected_lines = filter_out_doc_id(expected_lines)
+        if ignore_original_obj_ids:
+            actual_lines = filter_out_original_obj_ids(actual_lines)
+            expected_lines = filter_out_original_obj_ids(expected_lines)
+        if ignore_xref_offsets:
+            actual_lines = filter_out_xref_offsets(actual_lines)
+            expected_lines = filter_out_xref_offsets(expected_lines)
+        if actual_lines != expected_lines:
+            # It is important to reduce the size of both list of bytes here,
+            # to avoid .assertSequenceEqual to take forever to finish, that
+            # itself calls difflib.ndiff, that has cubic complexity from this
+            # comment by Tim Peters: https://bugs.python.org/issue6931#msg223459
+            actual_lines = subst_streams_with_hashes(actual_lines)
+            expected_lines = subst_streams_with_hashes(expected_lines)
+        assert actual_lines == expected_lines
+        if linearize:
+            _run_cmd("qpdf", "--check-linearization", str(actual_pdf_path))
+    else:  # Fallback to hash comparison
+        actual_hash = hashlib.md5(actual_pdf_path.read_bytes()).hexdigest()
+        expected_hash = hashlib.md5(expected_pdf_path.read_bytes()).hexdigest()
 
-    assert actual_hash == expected_hash, f"{actual_hash} != {expected_hash}"
+        assert actual_hash == expected_hash, f"{actual_hash} != {expected_hash}"
+
+
+def filter_out_doc_id(lines: Iterable[bytes]) -> list[bytes]:
+    return [line for line in lines if not line.startswith(b"  /ID [<")]
+
+
+def filter_out_original_obj_ids(lines: Iterable[bytes]) -> list[bytes]:
+    return [
+        line
+        for line in lines
+        if not line.startswith(b"%% Original object ID: ")
+    ]
+
+
+def filter_out_xref_offsets(lines: Iterable[bytes]) -> list[bytes]:
+    return [line for line in lines if not line.endswith(b" 00000 n ")]
+
+
+def subst_streams_with_hashes(in_lines: Iterable[bytes]) -> list[bytes]:
+    """This utility function reduce the length of `in_lines`, a list of bytes,
+    by replacing multi-lines streams looking like this:
+
+    ```
+    stream
+    {non-printable-binary-data}endstream
+    ```
+
+    by a single line with this format:
+
+    ```
+    <stream with MD5 hash: abcdef0123456789>
+    ```
+    """
+    out_lines, stream = [], None
+    for line in in_lines:
+        if line == b"stream":
+            assert stream is None
+            stream = bytearray()
+        elif stream == b"stream":
+            # First line of stream, we check if it is binary or not:
+            try:
+                line.decode("latin-1")
+                if not (b"\0" in line or b"\xff" in line):
+                    # It's likely to be text! No need to compact stream
+                    stream = None
+            except UnicodeDecodeError:
+                pass
+        if stream is None:
+            out_lines.append(line)
+        else:
+            stream += line
+        if line.endswith(b"endstream") and stream:
+            stream_hash = hashlib.md5(stream).hexdigest()
+            out_lines.append(
+                f"<stream with MD5 hash: {stream_hash}>\n".encode()
+            )
+            stream = None
+    return out_lines
 
 
 # NOTE: Adapted from https://mattgemmell.scot/textindex/
@@ -444,7 +564,7 @@ def create_figure_test_cases() -> Iterator[
     test_case = "Locator suffixes"
     root = TextIndexEntry(label=None)
     entries = [TextIndexEntry(label="later works", parent=root)]
-    entries[-1].add_reference(0, suffix="n.1")
+    entries[-1].add_reference(0, start_suffix="n.1")
     yield (
         test_case,
         "He would go on to discuss this in more detail in his "
@@ -458,7 +578,7 @@ def create_figure_test_cases() -> Iterator[
     test_case = "Locator suffixes (squared brackets)"
     root = TextIndexEntry(label=None)
     entries = [TextIndexEntry(label="later works", parent=root)]
-    entries[-1].add_reference(0, suffix="[n.1]")
+    entries[-1].add_reference(0, start_suffix="[n.1]")
     yield (
         test_case,
         "He would go on to discuss this in more detail in his "
@@ -472,7 +592,7 @@ def create_figure_test_cases() -> Iterator[
     test_case = "Locator end suffixes"
     root = TextIndexEntry(label=None)
     entries = [TextIndexEntry(label="something", parent=root)]
-    entries[-1].add_reference(0, suffix="n.1")
+    entries[-1].add_reference(0, start_suffix="n.1")
     entries[-1].update_latest_reference_end(1, end_suffix="n.2")
     yield (
         test_case,
@@ -601,18 +721,18 @@ def create_figure_test_cases() -> Iterator[
     ]
     entries.append(TextIndexEntry(label="compensator", parent=root))
     entries[-1].add_cross_reference(
-        1,
+        0,
         CrossReferenceType.SEE,
         ["indeterminacy principle (Heisenberg, Werner Karl)"],
     )
-    entries[0].add_reference(2)
+    entries[0].add_reference(1)
     yield (
         test_case,
         '{^"indeterminacy principle (Heisenberg, Werner Karl)"##q-uncert}'
         "A key component of the Enterprise's transporter system is the "
         "Heisenberg compensator{^|#q-uncert}. This is the target{^#q-uncert}.",
         "A key component of the Enterprise's transporter system is the "
-        "Heisenberg [compensator](#idx1). This is the [target](#idx2).",
+        "Heisenberg [compensator](#idx0). This is the [target](#idx1).",
         entries,
         None,
     )
@@ -647,13 +767,13 @@ def create_figure_test_cases() -> Iterator[
     test_case = "Disabling and re-enabling TextIndex processing"
     root = TextIndexEntry(label=None)
     entries = [TextIndexEntry(label="bar", parent=root)]
-    entries[-1].add_reference(3)
+    entries[-1].add_reference(0)
     yield (
         test_case,
         "{^-}This index mark won't be processed: foo{^}{^+}. "
         "This index mark will be processed: bar{^}.",
         "This index mark won't be processed: foo{^}. "
-        "This index mark will be processed: [bar](#idx3).",
+        "This index mark will be processed: [bar](#idx0).",
         entries,
         None,
     )
