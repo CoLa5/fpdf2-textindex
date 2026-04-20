@@ -107,7 +107,7 @@ order-by-type = false
 # group-by-package = true
 
 [tool.ruff.lint.per-file-ignores]
-"test/**" = ["D"]  # Do not require docstrings in tests
+"test/**" = ["D", "DOC"]  # Do not require docstrings in tests
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
