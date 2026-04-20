@@ -8,6 +8,7 @@ import dataclasses
 import enum
 from typing import Any, ClassVar, Self
 
+from fpdf2_textindex import constants as const
 from fpdf2_textindex.constants import LOGGER
 from fpdf2_textindex.md_emphasis import MDEmphasis
 from fpdf2_textindex.utils import join_label_path
@@ -41,8 +42,28 @@ class Alias(_LabelPathABC):
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}"
-            f"(#{self.name:s} = {self.joined_label_path!r:s})"
+            f"(#{self.name:s} -> {self.joined_label_path!r:s})"
         )
+
+
+@dataclasses.dataclass(kw_only=True, slots=True)
+class LinkLocation:
+    """Link Location."""
+
+    page: int
+    """The page the link is referened/used on."""
+
+    x: float
+    """The `x`-position on the page."""
+
+    y: float
+    """The `y`-position on the page."""
+
+    w: float
+    """The width the link has on the page."""
+
+    h: float
+    """The height the link has on the page."""
 
 
 @dataclasses.dataclass(kw_only=True, slots=True)
@@ -56,13 +77,23 @@ class CrossReference(_LabelPathABC):
     """The type of the cross reference."""
 
     label_path: tuple[str, ...]
-    """The label path of the cross reference."""
+    """The label path the cross reference points to."""
+
+    location: LinkLocation | None = dataclasses.field(default=None, init=False)
+    """The (link) location in the document the cross reference is set at."""
 
     def __str__(self) -> str:
         return f"{self.type.capitalize():s} {self.joined_label_path:s}"
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}('{self!s:s}')"
+
+    @property
+    def link(self) -> str:
+        """The link in the document that must be set in the text index to lead
+        from the text to the text index.
+        """
+        return f"{const.INDEX_ID_PREFIX:s}{self.id:d}"
 
 
 class CrossReferenceType(enum.StrEnum):
@@ -72,10 +103,10 @@ class CrossReferenceType(enum.StrEnum):
     """None."""
 
     SEE = enum.auto()
-    """See-reference."""
+    """SEE-cross reference."""
 
     ALSO = "see also"
-    """(See) Also-reference."""
+    """SEE ALSO-cross reference."""
 
     @classmethod
     def _missing_(cls, value: Any) -> Self | None:  # noqa: ANN401
@@ -84,18 +115,6 @@ class CrossReferenceType(enum.StrEnum):
         if isinstance(value, str):
             return cls(value.upper())
         return None
-
-
-@dataclasses.dataclass(kw_only=True, slots=True)
-class LinkLocation:
-    """Link Location."""
-
-    name: str
-    page: int
-    x: float
-    y: float
-    w: float
-    h: float
 
 
 @dataclasses.dataclass(kw_only=True, repr=False, slots=True)
@@ -144,12 +163,18 @@ class Node(_LabelPathABC):
 
     @property
     def children(self) -> list[Self]:
-        """The children."""
+        """The sorted children."""
         return sorted(self._children, key=lambda c: c.label)
 
     @property
     def depth(self) -> int:
-        """The depth (root = ``0``, first level = ``1``)."""
+        """The depth.
+
+        - (invisible) root: 0
+        - entries: 1
+        - subentries: 2
+        - sub-subentries: 3
+        """
         return sum(1 for _ in self.iter_parents()) + 1
 
     @property
@@ -192,7 +217,9 @@ class Node(_LabelPathABC):
         """Iterates over the children (going down).
 
         Yields:
-            The children.
+            The first child, its grandchildren, great-grandchildren, ..., then
+            the second child, its grandchildren, great-grandchildren, ..., and
+            so forth.
         """
         for child in self.children:
             yield from iter(child)  # type: ignore[misc]
@@ -201,7 +228,7 @@ class Node(_LabelPathABC):
         """Iterates over the parents without the root (going up).
 
         Yields:
-            The parents.
+            The parent, grandparent, great-grandparent, ..., and so forth.
         """
         # Do not yield root
         if self.parent is None:
@@ -219,17 +246,45 @@ class Reference:
     start_id: int
     """The start id of the reference."""
 
+    start_suffix: str | None = None
+    """The start suffix of the reference or ``None``."""
+
+    start_location: LinkLocation | None = dataclasses.field(
+        default=None, init=False
+    )
+    """The start (link) location in the document the reference is set at."""
+
     end_id: int | None = dataclasses.field(default=None, init=False)
     """The end id of the reference or ``None``."""
-
-    suffix: str | None = None
-    """The (start) suffix of the reference or ``None``."""
 
     end_suffix: str | None = dataclasses.field(default=None, init=False)
     """The end suffix of the reference or ``None``."""
 
+    end_location: LinkLocation | None = dataclasses.field(
+        default=None, init=False
+    )
+    """The end (link) location in the document the reference is set at."""
+
     locator_emphasis: bool = False
-    """Whether to emphasize the locator of the reference."""
+    """Whether to emphasize the locator (page number) of the reference in the
+    text index (`True`) or not (`False`)."""
+
+    @property
+    def start_link(self) -> str:
+        """The start link in the document that must be set in the text index to
+        lead from the text to the text index.
+        """
+        return f"{const.INDEX_ID_PREFIX:s}{self.start_id:d}"
+
+    @property
+    def end_link(self) -> str | None:
+        """The end link in the document that must be set in the text index to
+        lead from the text to the text index. In case of no end id, the end link
+        will be `None`.
+        """
+        if self.end_id is None:
+            return None
+        return f"{const.INDEX_ID_PREFIX:s}{self.end_id:d}"
 
 
 @dataclasses.dataclass(kw_only=True, repr=False, slots=True)
@@ -292,15 +347,15 @@ class TextIndexEntry(Node):
         if self.references and cross_ref_type == CrossReferenceType.SEE:
             if strict:
                 msg = (
-                    f"cannot add a SEE cross reference to entry "
+                    f"cannot add a SEE-cross reference to entry "
                     f"{self.joined_label_path!r} with former reference "
                     f"(locator)"
                 )
                 raise ValueError(msg)
             LOGGER.warning(
-                "Adding a SEE cross reference to entry %r with former "
+                "Adding a SEE-cross reference to entry %r with former "
                 "reference (locator); cross reference will be converted to SEE "
-                "SEE",
+                "ALSO",
                 self.joined_label_path,
             )
             cross_ref_type = CrossReferenceType.ALSO
@@ -318,8 +373,8 @@ class TextIndexEntry(Node):
         start_id: int,
         *,
         locator_emphasis: bool = False,
+        start_suffix: str | None = None,
         strict: bool = True,
-        suffix: str | None = None,
     ) -> None:
         """Adds a reference (locator) to the entry.
 
@@ -327,11 +382,12 @@ class TextIndexEntry(Node):
             start_id: The start id of the reference.
             locator_emphasis: Whether to emphasize the locator of the reference.
                 Defaults to ``False``.
+            start_suffix: The start suffix of the reference. Defaults to
+                ``None``.
             strict: Whether to raise a ``ValueError`` if adding a SEE-cross
                 reference to an entry with former "normal" reference (locator).
                 Else, it will be just warned.
                 Defaults to ``True``.
-            suffix: The (start) suffix of the reference. Defaults to ``None``.
 
         Raises:
             ValueError: If ``strict=True`` and adding a reference locator to an
@@ -343,12 +399,12 @@ class TextIndexEntry(Node):
             if strict:
                 msg = (
                     f"cannot add a reference (locator) to entry "
-                    f"{self.joined_label_path!r} with former SEE "
-                    f"cross reference"
+                    f"{self.joined_label_path!r} with former SEE-cross "
+                    f"reference"
                 )
                 raise ValueError(msg)
             LOGGER.warning(
-                "Adding a reference (locator) to entry %r with former SEE "
+                "Adding a reference (locator) to entry %r with former SEE-"
                 "cross reference(s); cross reference(s) will be converted to "
                 "SEE ALSO",
                 self.joined_label_path,
@@ -360,7 +416,7 @@ class TextIndexEntry(Node):
         self.references.append(
             Reference(
                 start_id=start_id,
-                suffix=suffix,
+                start_suffix=start_suffix,
                 locator_emphasis=locator_emphasis,
             )
         )

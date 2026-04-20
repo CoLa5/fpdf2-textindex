@@ -19,41 +19,6 @@ from fpdf2_textindex.pdf import FPDF
 from fpdf2_textindex.utils import md_link
 
 
-def collect_index_links(pdf: fpdf.FPDF) -> dict[str, LinkLocation]:
-    """Collects all index links from a pdf.
-
-    Args:
-        pdf: The :py:class:`fpdf.FPDF`-instance to collect links from.
-
-    Returns:
-        A dictionary of link name and its location.
-    """
-    link_locs = {}
-    for page_num, pdf_page in pdf.pages.items():
-        if pdf_page.annots is None:
-            continue
-
-        for a in pdf_page.annots:
-            link_name = str(a.dest)
-            if not (
-                link_name.startswith(const.INDEX_ID_PREFIX)
-                or link_name.startswith(const.ENTRY_ID_PREFIX)
-            ):
-                continue
-            assert a.rect.startswith("[") and a.rect.endswith("]"), a.rect
-            x, y_h, x_w, y = map(
-                lambda x: float(x) / pdf.k,
-                a.rect[1:-1].split(" ", maxsplit=3),
-            )
-            w = x_w - x
-            h = y - y_h
-            y = pdf.h - y
-            link_locs[link_name] = LinkLocation(
-                name=link_name, page=page_num, x=x, y=y, w=w, h=h
-            )
-    return link_locs
-
-
 class TextIndexEntryP(Protocol):
     """Text Index Protocol."""
 
@@ -203,8 +168,6 @@ class TextIndexRenderer:
             LOGGER.warning("No entries defined")
             return
 
-        self._link_locations = collect_index_links(pdf)
-
         max_depth = max(e.depth for e in entries)
         if max_depth > 2:
             if self.run_in_style:
@@ -234,11 +197,25 @@ class TextIndexRenderer:
             )
             self._render_header(pdf, entry, prepared_entries[0][1])
             for e, text in prepared_entries:
-                x_entry, y_entry = pdf.x, pdf.y
-                self._render_entry(pdf, e, text)
-                w_entry, h_entry = self._calc_entry_size(pdf, e.depth, text)
+                # LOGGER.info("%d %r", pdf.page, e.label)
+                page_entry, x_entry, y_entry, w_entry, h_entry = (
+                    self._render_entry(pdf, e, text)
+                )
                 if isinstance(e, TextIndexEntry):
-                    self._set_links(pdf, e, x_entry, y_entry, w_entry, h_entry)
+                    self._set_links(
+                        pdf, e, page_entry, x_entry, y_entry, w_entry, h_entry
+                    )
+                    if self._run_in_children(e, max_depth):
+                        for c in e.children:
+                            self._set_links(
+                                pdf,
+                                c,
+                                page_entry,
+                                x_entry,
+                                y_entry,
+                                w_entry,
+                                h_entry,
+                            )
 
         pdf.section_title_styles = prev_section_title_styles
 
@@ -249,12 +226,13 @@ class TextIndexRenderer:
         pdf: FPDF,
         entry: TextIndexEntryP,
         entry_text: str,
-    ) -> None:
+    ) -> tuple[int, float, float, float, float]:
         # Do not fit half an entry
         text_style = self._get_text_style(entry.depth)
-        h_entry = self._calc_entry_size(pdf, entry.depth, entry_text)[1]
+        w_entry, h_entry = self._calc_entry_size(pdf, entry.depth, entry_text)
         pdf._perform_page_break_if_need_be(h_entry)
 
+        x_entry, y_entry = pdf.x, pdf.y
         # Consider level indent
         if TYPE_CHECKING:
             assert not isinstance(text_style.l_margin, fpdf.Align)
@@ -265,6 +243,7 @@ class TextIndexRenderer:
             self._add_to_outline(pdf, entry.depth, entry.label),
             pdf.use_text_style(text_style.replace(l_margin=l_margin)),
         ):
+            page_entry = pdf.page
             pdf.multi_cell(
                 w=0,
                 h=pdf.font_size * self.line_spacing,
@@ -276,6 +255,12 @@ class TextIndexRenderer:
                 new_x=fpdf.XPos.LMARGIN,
                 new_y=fpdf.YPos.NEXT,
             )
+        x_entry += self.level_indent * (entry.depth - 1)
+        assert fpdf.util.FloatTolerance.equal(pdf.y - y_entry, h_entry), (
+            pdf.y - y_entry,
+            h_entry,
+        )
+        return page_entry, x_entry, y_entry, w_entry, h_entry
 
     def _render_header(
         self,
@@ -392,7 +377,7 @@ class TextIndexRenderer:
                 )
                 for line in lines
             )
-            w += 2 * pdf.c_margin
+            w += 2 * pdf.c_margin + self.level_indent
 
         assert pdf.x == prev_x and pdf.y == prev_y, (
             "position changed during calculation of entry height"
@@ -462,7 +447,7 @@ class TextIndexRenderer:
         )
         assert not (has_see_refs and has_refs), (
             f"Entry {entry.joined_label_path!r} has a reference (locator) "
-            f"and a SEE cross reference"
+            f"and a SEE-ross reference"
         )
         has_also_refs = any(
             cr.type == CrossReferenceType.ALSO for cr in entry.cross_references
@@ -471,7 +456,7 @@ class TextIndexRenderer:
         # Label
         text_pts = [entry.label]
 
-        # See Cross references
+        # SEE-cross references
         if has_see_refs:
             text_pts.extend(
                 self._prepare_cross_references(
@@ -494,7 +479,7 @@ class TextIndexRenderer:
                 )
             )
 
-        # Run-In Style
+        # Run-in style
         run_in_children = self._run_in_children(entry, max_depth)
         if run_in_children and entry.children:
             if has_refs:
@@ -515,10 +500,10 @@ class TextIndexRenderer:
                     )
                 )
 
-        # Own Also Cross-References
+        # Own SEE ALSO-ross references
         # Check whether we lack children and thus potentially need to inline our
-        # own see-also references.
-        # This provides run-in style for such references.
+        # own SEE ALSO-cross references. This provides run-in style for such
+        # cross references.
         if has_also_refs and (not entry.children or run_in_children):
             text_pts.extend(
                 self._prepare_cross_references(
@@ -690,9 +675,9 @@ class TextIndexRenderer:
         refs = sorted(
             entry.references,
             key=(
-                (lambda r: (not r.locator_emphasis, r.start_id))
+                (lambda r: (not r.locator_emphasis, r.start_id, r.end_id))
                 if self.sort_emph_first
-                else (lambda r: r.start_id)
+                else (lambda r: (r.start_id, r.end_id))
             ),
         )
 
@@ -708,44 +693,38 @@ class TextIndexRenderer:
         self._last_page = -1
         for i, ref in enumerate(refs):
             # Render page of start id
-            start_text_to_index_link = (
-                f"{const.INDEX_ID_PREFIX:s}{ref.start_id:d}"
-            )
+            if TYPE_CHECKING:
+                assert isinstance(ref.start_location, LinkLocation)
             yield from self._prepare_referenced_page(
                 pdf,
-                entry,
+                ref.start_link,
+                ref.start_location,
                 ref.locator_emphasis,
                 first_separator if i == 0 else const.FIELD_SEPARATOR,
-                start_text_to_index_link,
             )
 
             # Render page of end id
-            end_text_to_index_link = None
-            if ref.end_id:
-                end_text_to_index_link = (
-                    f"{const.INDEX_ID_PREFIX:s}{ref.end_id:d}"
-                )
+            if isinstance(ref.end_link, str):
+                if TYPE_CHECKING:
+                    assert isinstance(ref.end_location, LinkLocation)
                 yield from self._prepare_referenced_page(
                     pdf,
-                    entry,
+                    ref.end_link,
+                    ref.end_location,
                     ref.locator_emphasis,
                     const.RANGE_SEPARATOR,
-                    end_text_to_index_link,
                 )
 
             # Render suffix of start id
             separator = ""
-            if isinstance(ref.suffix, str):
+            if isinstance(ref.start_suffix, str):
                 yield separator
-                yield md_link(
-                    ref.suffix,
-                    f"#{start_text_to_index_link:s}{const.TEXT_ID_SUFFIX:s}",
-                )
+                yield md_link(ref.start_suffix, f"#{ref.start_link:s}")
                 separator = " "
 
             # Render suffix of end id
             if isinstance(ref.end_suffix, str):
-                if end_text_to_index_link is None:
+                if ref.end_link is None:
                     msg = (
                         f"entry's {entry.joined_label_path!r:s} "
                         f"(id={entry.id:d}) reference with start id "
@@ -754,31 +733,17 @@ class TextIndexRenderer:
                     )
                     raise RuntimeError(msg)
                 yield separator
-                yield md_link(
-                    ref.end_suffix,
-                    f"#{end_text_to_index_link:s}{const.TEXT_ID_SUFFIX:s}",
-                )
+                yield md_link(ref.end_suffix, f"#{ref.end_link:s}")
 
     def _prepare_referenced_page(
         self,
         pdf: FPDF,
-        entry: TextIndexEntry,
+        text_to_index_link: str,
+        link_loc: LinkLocation,
         locator_emphasis: bool,
         separator: str,
-        text_to_index_link: str,
     ) -> Iterator[str]:
-        if text_to_index_link not in self._link_locations:
-            LOGGER.warning(
-                "cannot find link location of reference with start/end id %s "
-                "of entry %r to locate referenced page; reference will be "
-                "skipped in index",
-                text_to_index_link[len(const.INDEX_ID_PREFIX) :],
-                entry.joined_label_path,
-            )
-            return
-
         # Ignore consecutive references to same page
-        link_loc = self._link_locations[text_to_index_link]
         if self.ignore_same_page_refs and link_loc.page == self._last_page:
             return
 
@@ -820,13 +785,14 @@ class TextIndexRenderer:
             though, for your readers' sake!
         """
         if self.run_in_style:
-            return entry.depth > 1 and entry.depth == max_depth - 1
+            return entry.depth >= 2 and entry.depth == max_depth - 1
         return False
 
     def _set_links(
         self,
         pdf: FPDF,
         entry: TextIndexEntry,
+        page_entry: int,
         x_entry: float,
         y_entry: float,
         w_entry: float,
@@ -840,44 +806,51 @@ class TextIndexRenderer:
         )
         pdf.add_link(name=entry_link, x=x_entry, y=y_entry)
         link_loc = LinkLocation(
-            name=entry_link,
-            page=pdf.page,
+            page=page_entry,
             x=x_entry,
             y=y_entry,
             w=w_entry,
             h=h_entry,
         )
         self._link_locations[entry_link] = link_loc
+        LOGGER.debug(
+            "%sEntry %r (Level%d): %r",
+            "  " * (entry.depth - 1),
+            entry.label,
+            entry.depth,
+            link_loc,
+        )
 
         # Point links on text page to index entry
         # References
         for ref in entry.references:
-            text_to_index_link = f"{const.INDEX_ID_PREFIX:s}{ref.start_id:d}"
             # dest = pdf.named_destinations[text_to_index_link]
             # fpdf_link_idx = reverse_dict_items(pdf.links.items())[dest]
-            fpdf_link_idx = pdf._index_links[text_to_index_link]
+            fpdf_link_idx = pdf._index_links[ref.start_link]
             pdf.set_link(
                 link=fpdf_link_idx,
-                name=text_to_index_link,
+                name=ref.start_link,
                 page=link_loc.page,
                 x=link_loc.x,
                 y=link_loc.y,
             )
 
-            if isinstance(ref.end_id, int):
-                text_to_index_link = f"{const.INDEX_ID_PREFIX:s}{ref.end_id:d}"
+            if isinstance(ref.end_link, str):
+                fpdf_link_idx = pdf._index_links[ref.end_link]
                 pdf.set_link(
-                    name=text_to_index_link,
+                    link=fpdf_link_idx,
+                    name=ref.end_link,
                     page=link_loc.page,
                     x=link_loc.x,
                     y=link_loc.y,
                 )
 
-        # Cross-References
+        # Cross references
         for cross_ref in entry.cross_references:
-            text_to_index_link = f"{const.INDEX_ID_PREFIX:s}{cross_ref.id:d}"
+            fpdf_link_idx = pdf._index_links[cross_ref.link]
             pdf.set_link(
-                name=text_to_index_link,
+                link=fpdf_link_idx,
+                name=cross_ref.link,
                 page=link_loc.page,
                 x=link_loc.x,
                 y=link_loc.y,

@@ -32,6 +32,7 @@ from fpdf.util import builtin_srgb2014_bytes
 
 from fpdf2_textindex import constants as const
 from fpdf2_textindex.concordance import ConcordanceList
+from fpdf2_textindex.interface import LinkLocation
 from fpdf2_textindex.interface import TextIndexEntry
 from fpdf2_textindex.parser import TextIndexParser
 
@@ -57,10 +58,10 @@ class FPDF(fpdf.FPDF):  # noqa: D101
     CONCORDANCE_FILE: os.PathLike[str] | str | None = None
     """The path to a concordance file."""
 
-    STRICT_MODE: bool = True
-    """If ``True`` and an entry has a normal reference (locator) and a SEE
-    cross reference, a ``ValueError`` will be raised. Else, it will just be
-    warned. Defaults to ``True``.
+    STRICT_INDEX_MODE: bool = True
+    """If ``True`` and an entry has a normal reference (locator) and a SEE-cross
+    reference, a ``ValueError`` will be raised. Else, it will just be a warning.
+    Defaults to ``True``.
     """
 
     def __init__(
@@ -86,11 +87,51 @@ class FPDF(fpdf.FPDF):  # noqa: D101
             )
         self._index_allow_page_insertion = False
         self._index_links = {}
-        self._index_parser = TextIndexParser()
+        self._index_parser = TextIndexParser(strict=self.STRICT_INDEX_MODE)
         self.index_placeholder = None
 
+    def _set_index_link_locations(self) -> None:
+        link_locations = {}
+
+        # Collect index locations
+        for page_num, pdf_page in self.pages.items():
+            if pdf_page.annots is None:
+                continue
+
+            h_page = pdf_page.dimensions()[1] / self.k
+            for a in pdf_page.annots:
+                link_name = str(a.dest)
+                if not (
+                    link_name.startswith(const.INDEX_ID_PREFIX)
+                    or link_name.startswith(const.ENTRY_ID_PREFIX)
+                ):
+                    continue
+                assert a.rect.startswith("[") and a.rect.endswith("]"), a.rect
+                x, y_h, x_w, y = map(
+                    lambda x: float(x) / self.k,
+                    a.rect[1:-1].split(" ", maxsplit=3),
+                )
+                w = x_w - x
+                h = y - y_h
+                y = h_page - y
+                link_locations[link_name] = LinkLocation(
+                    page=page_num, x=x, y=y, w=w, h=h
+                )
+
+        # Add link locations to entries
+        for entry in self._index_parser.entries:
+            for ref in entry.references:
+                ref.start_location = link_locations[ref.start_link]
+                if ref.end_link:
+                    ref.end_location = link_locations[ref.end_link]
+            for cross_ref in entry.cross_references:
+                cross_ref.location = link_locations[cross_ref.link]
+
     def _insert_index(self) -> None:
-        # NOTE: REUSING functionality of ToC
+        # NOTE: Text Index reuses functionality of ToC
+
+        # Collect links locations and add them to entries
+        self._set_index_link_locations()
 
         # Doc has been closed but we want to write to self.pages[self.page]
         # instead of self.buffer:

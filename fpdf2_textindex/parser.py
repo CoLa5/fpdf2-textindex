@@ -63,9 +63,11 @@ class TextIndexParser:
         """Initializes the parser.
 
         Args:
-            strict: If ``True`` and an entry has a normal reference (locator)
-                and a SEE cross reference, a ``ValueError`` will be raised.
-                Else, it will just be warned. Defaults to ``True``.
+            strict: If ``True`` and an entry will have a normal reference
+                (locator) and a SEE-cross reference, a ``ValueError`` will be
+                raised. Else, it will just be a warning and the SEE-cross
+                reference will be automatically converted to SEE ALSO.
+                Defaults to ``True``.
         """
         self._alias_reg = AliasRegistry()
         self._enabled = True
@@ -154,9 +156,8 @@ class TextIndexParser:
             RuntimeError: If a directive cannot be parsed.
             ValueError:
                 - If the label cannot be identified correctly.
-                - If ``strict=True`` and and adding a SEE-cross reference to
-                    an entry with former "normal" reference (locator) or
-                    viceversa.
+                - If ``strict=True`` and and adding a SEE-cross reference to an
+                  entry with former "normal" reference (locator) or viceversa.
         """  # noqa: DOC502
         LOGGER.info("Parsing text by index parser")
 
@@ -166,7 +167,6 @@ class TextIndexParser:
         for directive in self._DIRECTIVE_PATTERN.finditer(text):
             # Parse and encapsulate each entry, either as object or range-end
             LOGGER.debug("Directive found: %r", directive.group(0))
-            self._directive_id += 1
             params = directive.group("params").strip()
 
             params, toggling, status_toggled = self._parse_toggling_directive(
@@ -184,6 +184,7 @@ class TextIndexParser:
                 )
                 continue
 
+            self._directive_id += 1
             label, content = self._parse_label(directive)
 
             params, closing, locator_emphasis = self._parse_final_marker(params)
@@ -203,6 +204,7 @@ class TextIndexParser:
                 # Replace directive in text
                 text = insert_at_match(text, directive, content, offset=offset)
                 offset += len(content) - len(directive.group(0))
+                self._directive_id -= 1
                 continue
 
             LOGGER.debug("\tLabel path: %s", label_path)
@@ -212,6 +214,7 @@ class TextIndexParser:
                     "No entry label specified in directive, ignoring: %r",
                     directive.group(0),
                 )
+                self._directive_id -= 1
                 continue
 
             params, suffix = self._parse_suffix(params)
@@ -237,6 +240,7 @@ class TextIndexParser:
                 suffix,
             )
             if not replace_directive:
+                self._directive_id -= 1
                 continue
 
             # Replace directive in text with suitable link
@@ -276,7 +280,7 @@ class TextIndexParser:
         # Process aliases before splitting path
         refs_string = self._alias_reg.replace_aliases(refs_string)
 
-        # Handle wildcards in cross-refs
+        # Handle wildcards in cross references
         refs_string = self._parse_wildcards(refs_string, content)
 
         refs = refs_string.split(const.REFS_DELIMITER)
@@ -296,13 +300,13 @@ class TextIndexParser:
                 ref = ref[len(const.ALSO_MARKER) :]
             elif not inbound:
                 # Do not create a (page-) reference for this mark's entry if
-                # there is a (non-also) cross reference.
+                # there is a SEE-cross reference.
                 create_ref = False
 
             # Split reference label path
             ref_label_path = split_label_path(ref)
 
-            # Cross-ref in different entry, referencing this mark's entry
+            # Cross reference in different entry, referencing this mark's entry
             if inbound:
                 source_entry, _ = self.entry_at_label_path(
                     ref_label_path, create=True
@@ -324,7 +328,7 @@ class TextIndexParser:
                     strict=self._strict,
                 )
 
-            # Cross-ref within this mark's entry
+            # Cross reference within this mark's entry
             else:
                 cross_references.append((ref_type, ref_label_path))
 
@@ -602,8 +606,8 @@ class TextIndexParser:
             entry.add_reference(
                 self._directive_id,
                 locator_emphasis=locator_emphasis,
+                start_suffix=suffix,
                 strict=self._strict,
-                suffix=suffix,
             )
         elif suffix or locator_emphasis:
             LOGGER.warning(
