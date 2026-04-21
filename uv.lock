@@ -118,7 +118,7 @@ dependencies = [
 
 [[package]]
 name = "fpdf2-textindex"
-version = "0.0.1"
+version = "0.1"
 source = { editable = "." }
 dependencies = [
     { name = "fpdf2" },
