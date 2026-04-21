@@ -1,16 +1,14 @@
 name: "Setup uv environment"
 description: "Install system deps, Python, uv, and project dependencies"
-on:
-  workflow_dispatch:
-    inputs:
-      docs:
-        description: "Enable --docs flag for uv sync"
-        required: false
-        default: "false"
-        type: choice
-        options:
-          - "false"
-          - "true"
+inputs:
+  docs:
+    type: choice
+    description: "Enable --group docs flag for uv sync"
+    required: false
+    default: "false"
+    options:
+      - "false"
+      - "true"
 runs:
   using: "composite"
   steps:
