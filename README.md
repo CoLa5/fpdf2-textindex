@@ -103,6 +103,12 @@ numbering, use **Page Labels** to assign a specific numbering style to the index
 pages. When using Page Labels, any extra text index pages will follow the
 numbering style of the first text index page
 
+## Example
+
+An example can be created by
+[`example/textindex_figures.py`](example/textindex_figures.py) and produces
+[textindex_figures.pdf](https://github.com/CoLa5/fpdf2-textindex/releases/download/example-pdf/textindex_figures.pdf).
+
 ---
 
 ## Internals - Idea
