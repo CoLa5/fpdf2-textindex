@@ -1,4 +1,4 @@
-[![Documentation](https://img.shields.io/badge/docs-github.io-blue?logo=googledocs&logoColor=white)](https://cola5.github.io/fpdf2-textindex)
+[![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://cola5.github.io/fpdf2-textindex)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat)](https://www.gnu.org/licenses/gpl-3.0)
 
 [![CI](https://github.com/CoLa5/fpdf2-textindex/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/CoLa5/fpdf2-textindex/actions/workflows/ci.yml)
@@ -6,6 +6,8 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/CoLa5/fpdf2-textindex)](https://github.com/CoLa5/fpdf2-textindex/commits/main)
 
 # fpdf2 Text Index
+
+<img src="docs/assets/logo.png" title="fpdf2_textindex logo" width="25%"/>
 
 Adds a **text index** to [fpdf2](https://github.com/py-pdf/fpdf2), based on the
 documentation and source code of
@@ -31,9 +33,8 @@ pdf.output("example.pdf")
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
 directives in a text:
 
-> Most mechanical keyboard firmware{^} supports the use of [key > > > > > > > >
->
-> > combinations]{^}.
+> Most mechanical keyboard firmware{^} supports the use of [key
+> combinations]{^}.
 
 Print it in the PDF by enabling markdown in `fpdf2.FPDF.cell` or
 `fpdf2.FPDF.multi_cell`:
