@@ -1,0 +1,31 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="32"
+  height="32"
+  viewBox="0 0 32 32"
+  role="img"
+  aria-labelledby="title"
+>
+  <title id="title">fpdf2_textindex favicon</title>
+  <rect
+    x="1"
+    y="1"
+    width="30"
+    height="30"
+    fill="white"
+    stroke="red"
+    stroke-width="2"
+  />
+  <text
+    x="16"
+    y="18"
+    dominant-baseline="middle"
+    fill="#3a74a6"
+    font-family="Courier New, monospace"
+    font-size="24"
+    font-weight="bold"
+    text-anchor="middle"
+  >
+    ti
+  </text>
+</svg>

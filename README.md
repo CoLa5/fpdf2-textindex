@@ -7,6 +7,8 @@
 
 # fpdf2 Text Index
 
+![fpdf2_textindex logo](docs/icons/fpdf2_textindex.png)
+
 Adds a **text index** to [fpdf2](https://github.com/py-pdf/fpdf2), based on the
 documentation and source code of
 [Math Gemmell's Text Index](https://mattgemmell.scot/textindex/):
@@ -31,9 +33,8 @@ pdf.output("example.pdf")
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
 directives in a text:
 
-> Most mechanical keyboard firmware{^} supports the use of [key > > > > > > > >
->
-> > combinations]{^}.
+> Most mechanical keyboard firmware{^} supports the use of [key
+> combinations]{^}.
 
 Print it in the PDF by enabling markdown in `fpdf2.FPDF.cell` or
 `fpdf2.FPDF.multi_cell`:

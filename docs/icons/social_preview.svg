@@ -1,0 +1,173 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1280"
+  height="640"
+  viewBox="-192 -32 640 320"
+  role="img"
+  aria-labelledby="title"
+>
+  <title id="title">fpdf2_textindex icon</title>
+  <g id="frame">
+    <path
+      d="M32 10 l144 0 l48 48 l0 188 l-192 0 Z M176 10 l0 48 l48 0"
+      fill="white"
+      stroke="red"
+      stroke-width="8"
+    />
+    <path
+      d="M176 10 l48 48 l-48 0 Z"
+      fill="red"
+    />
+    <path
+      d="M172 62 l56 56 l0 -56 Z"
+      fill="#0000007f"
+    />
+  </g>
+  <g id="text">
+    <!-- <rect
+      x="44"
+      y="22"
+      width="120"
+      height="36"
+      fill="#ff000077"
+    /> -->
+    <text
+      x="44"
+      y="40"
+      dominant-baseline="middle"
+      fill="#3a74a6"
+      font-family="Courier New, monospace"
+      font-size="40"
+      font-weight="bold"
+    >
+      fpdf2
+    </text>
+    <!-- <rect
+      x="44"
+      y="66"
+      width="120"
+      height="36"
+      fill="#ff000077"
+    /> -->
+    <text
+      x="66"
+      y="84"
+      dominant-baseline="middle"
+      fill="#3a74a6"
+      font-family="Courier New, monospace"
+      font-size="40"
+      font-weight="bold"
+    >
+      text
+    </text>
+    <!-- <rect
+      x="44"
+      y="110"
+      width="120"
+      height="36"
+      fill="#ff000077"
+    /> -->
+    <text
+      x="44"
+      y="128"
+      dominant-baseline="middle"
+      fill="#3a74a6"
+      font-family="Courier New, monospace"
+      font-size="40"
+      font-weight="bold"
+    >
+      index
+    </text>
+  </g>
+  <g id="index-rects">
+    <!-- <rect
+      x="72"
+      y="156"
+      width="116"
+      height="32"
+      fill="none"
+      stroke="#3a74a6"
+      stroke-width="4"
+    /> -->
+    <path
+      d="M132 156 l-60 0 l0 32 l18 0"
+      fill="none"
+      stroke="#3a74a6"
+      stroke-width="4"
+      stroke-linecap="round"
+    />
+    <!-- <rect
+      x="46"
+      y="200"
+      width="116"
+      height="32"
+      fill="none"
+      stroke="#3a74a6"
+      stroke-width="4"
+    /> -->
+    <path
+      d="M64 200 l-18 0 l0 32 l116 0 l0 -22 M122 200 l-28 0"
+      fill="none"
+      stroke="#3a74a6"
+      stroke-width="4"
+      stroke-linecap="round"
+    />
+  </g>
+  <g id="snake">
+    <defs>
+      <path
+        id="eye"
+        d="M138 168 c12 11 24 3 24 -9 Z"
+      />
+      <clipPath id="clip-eye">
+        <use href="#eye" />
+      </clipPath>
+    </defs>
+    <path
+      id="chest"
+      d="M212 228 l0 -24 l-30 -13.5 l-30 1.5 l-48 -6 l3 6 l78 16.5 Z"
+      fill="orange"
+      stroke="orange"
+      stroke-width="2"
+    />
+    <path
+      id="tongue"
+      d="M113 186 l-24 6 l-24 2 l16.5 3 l-15 8 l30 -10 l36 -12 Z"
+      fill="red"
+    />
+    <path
+      id="back"
+      d="M212 204 l0 -48 l-48 -6 l-66 24 l6 12 l48 6 l30 -1.5 Z"
+      fill="#3a74a6"
+      stroke="orange"
+      stroke-width="2"
+    />
+    <path
+      id="back"
+      d="M212 162 l-36 12 l36 8 Z"
+      fill="orange"
+    />
+    <use
+      href="#eye"
+      fill="orange"
+    />
+    <ellipse
+      id="inner-eye"
+      cx="150"
+      cy="163"
+      rx="3"
+      ry="8"
+      clip-path="url(#clip-eye)"
+      fill="black"
+    />
+    <ellipse
+      id="nose"
+      cx="108"
+      cy="176.5"
+      rx="3"
+      ry="1.5"
+      fill="orange"
+      transform="rotate(-10, 108, 176.5)"
+    />
+  </g>
+</svg>
