@@ -12,6 +12,7 @@ import pdoc.render
 import fpdf2_textindex
 
 HERE: Final[pathlib.Path] = pathlib.Path(__file__).parent
+URL: Final[str] = "https://cola5.github.io/fpdf2-textindex"
 
 
 def write_sitemap(path: pathlib.Path) -> None:  # noqa: D103
@@ -29,9 +30,7 @@ def write_sitemap(path: pathlib.Path) -> None:  # noqa: D103
             filename = (
                 file.relative_to(path).as_posix().replace("index.html", "")
             )
-            f.write(
-                f"""\n<url><loc>https://cola5.github.io/fpdf2-textindex/{filename:s}</loc></url>"""
-            )
+            f.write(f"""\n<url><loc>{URL:s}/{filename:s}</loc></url>""")
         f.write("""\n</urlset>""")
 
 
@@ -39,12 +38,12 @@ if __name__ == "__main__":
     pdoc.render.configure(
         docformat="google",
         edit_url_map={
-            "fpdf2_textindex": "https://github.com/CoLa5/fpdf2-textindex/blob/main/fpdf2_textindex/",
+            "fpdf2_textindex": f"{URL:s}/blob/main/fpdf2_textindex/",
         },
-        favicon="/assets/favicon.svg",
-        footer_text=f"fpdf2_textindex v{fpdf2_textindex.__version__:s}",
-        logo="/assets/logo.svg",
-        logo_link="https://cola5.github.io/fpdf2-textindex/",
+        favicon="assets/favicon.svg",
+        footer_text=f"fpdf2_textindex <b>v{fpdf2_textindex.__version__:s}</b>",
+        logo="assets/logo.svg",
+        logo_link=URL,
         search=True,
         template_directory=HERE / "pdoc_template",
     )
@@ -54,6 +53,9 @@ if __name__ == "__main__":
         HERE / ".." / "fpdf2_textindex",
         output_directory=output,
     )
+    # Remove unnecessary forwarding index
+    (output / "fpdf2_textindex.html").replace(output / "index.html")
+
     write_sitemap(output)
 
     # Copy icons
