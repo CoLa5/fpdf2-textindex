@@ -86,9 +86,7 @@ jobs:
       - name: Create docs
         run: |
           mkdir -p public
-          uv run pdoc -o public/ fpdf2_textindex \
-          -e fpdf2_textindex=https://github.com/CoLa5/fpdf2-textindex/blob/main/fpdf2_textindex/ \
-          -t docs/pdoc
+          uv run python docs/make.py
 
       - name: Upload docs
         uses: actions/upload-pages-artifact@v4
