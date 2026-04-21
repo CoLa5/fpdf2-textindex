@@ -74,7 +74,7 @@ jobs:
 
   docs-build:
     name: Build Docs
-    # if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -95,11 +95,9 @@ jobs:
         with:
           path: public/
 
-  # Deploy the artifact to GitHub pages.
-  # This is a separate job so that only actions/deploy-pages has the necessary permissions.
   docs-deploy:
     name: Deploy Docs
-    # if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     needs: docs-build
     runs-on: ubuntu-latest
     permissions:
