@@ -38,6 +38,10 @@ repos:
     hooks:
       - id: uv-lock
       - id: uv-export
+        args:
+          ["--frozen", "--no-dev", "--output-file=requirements.txt", "--quiet"]
+      - id: uv-export
+        args: ["--frozen", "--output-file=requirements-dev.txt", "--quiet"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.10
@@ -65,6 +69,7 @@ repos:
         additional_dependencies:
           - fpdf2
 
+  # From https://github.com/py-pdf/fpdf2
   - repo: local
     hooks:
       - id: no-print-in-sources
