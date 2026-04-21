@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ["main", "dev"]
+  push:
+    branches: ["main", "dev"]
+
+permissions:
+  contents: read
+
+jobs:
+  pre-commit:
+    name: Pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-uv
+
+      - name: Cache pre-commit
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pre-commit
+          key:
+            pre-commit-3|${{ env.pythonLocation }}|${{
+            hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit
+        run:
+          uv run --no-sync --with pre-commit-uv pre-commit run
+          --show-diff-on-failure --color=always --all-files
+        shell: bash
+
+  test:
+    name: Test
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-uv
+
+      - name: Run tests
+        run: |
+          # Ensuring there is no `generate=True` left in calls to
+          # assert_pdf_equal
+          grep -IRF generate=True test/ && exit 1
+          # Executing all test
+          uv run pytest ./test -vv
+
+  example-pdf:
+    name: Example PDF
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-uv
+
+      - name: Create example pdf
+        run: |
+          cd example
+          uv run python textindex_figures.py
+
+      - name: Release example pdf
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: example-pdf
+          name: Example PDF
+          body: "Updated example book"
+          prerelease: true
+          files: ./example/textindex_figures.pdf
+
+  docs-build:
+    name: Build Docs
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-uv
+        with:
+          doc: true
+
+      - name: Create docs
+        run: |
+          mkdir -p public
+          uv run pdoc -o public/ fpdf2_textindex -e fpdf2_textindex=https://github.com/CoLa5/fpdf2-textindex/blob/main/fpdf2_textindex/ -t docs/pdoc
+
+      - name: Upload docs
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public/
+
+  # Deploy the artifact to GitHub pages.
+  # This is a separate job so that only actions/deploy-pages has the necessary permissions.
+  docs-deploy:
+    name: Deploy Docs
+    if: github.ref == 'refs/heads/main'
+    needs: docs-build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

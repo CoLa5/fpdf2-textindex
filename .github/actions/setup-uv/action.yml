@@ -1,0 +1,41 @@
+name: "Setup uv environment"
+description: "Install system deps, Python, uv, and project dependencies"
+on:
+  workflow_dispatch:
+    inputs:
+      doc:
+        description: "Enable --doc flag for uv sync"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+runs:
+  using: "composite"
+  steps:
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update --allow-releaseinfo-change && sudo apt-get install qpdf
+      shell: bash
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version-file: ".python-version"
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7.2.0
+      with:
+        version: "0.8.12"
+        enable-cache: true
+        cache-dependency-glob: ".pre-commit-config.yaml"
+
+    - name: Install dependencies
+      run: |
+        if [ "${{ github.event.inputs.doc }}" = "true" ]; then
+          uv sync --locked --all-extras --group doc
+        else
+          uv sync --locked --all-extras --dev
+        fi
+      shell: bash
