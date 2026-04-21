@@ -44,6 +44,12 @@ docs = [
     "pdoc>=16.0.0",
 ]
 
+[project.urls]
+Homepage = "https://cola5.github.io/fpdf2-textindex/"
+Documentation = "https://cola5.github.io/fpdf2-textindex/"
+Code = "https://github.com/CoLa5/fpdf2-textindex"
+"Issue tracker" = "https://github.com/CoLa5/fpdf2-textindex/issues"
+
 [tool.commitizen]
 name = "cz_conventional_commits"
 tag_format = "$version"
