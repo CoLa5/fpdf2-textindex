@@ -7,7 +7,7 @@
 
 # fpdf2 Text Index
 
-<img src="docs/assets/logo.png" title="fpdf2_textindex logo" width="25%"/>
+<img src="docs/icons/logo.png" title="fpdf2_textindex logo" width="25%"/>
 
 Adds a **text index** to [fpdf2](https://github.com/py-pdf/fpdf2), based on the
 documentation and source code of
