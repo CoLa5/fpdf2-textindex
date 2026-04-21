@@ -22,10 +22,11 @@ from fpdf2_textindex.interface import Reference
 from fpdf2_textindex.interface import TextIndexEntry
 from fpdf2_textindex.pdf import FPDF
 from fpdf2_textindex.renderer import TextIndexRenderer
+from fpdf2_textindex.version import FPDF2_TEXTINDEX_VERSION
 
 __docformat__ = "google"
 __license__ = "GPL 3.0"
-__version__ = "0.1"
+__version__ = FPDF2_TEXTINDEX_VERSION
 
 __all__ = (
     "FPDF",
