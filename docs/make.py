@@ -12,7 +12,8 @@ import pdoc.render
 import fpdf2_textindex
 
 HERE: Final[pathlib.Path] = pathlib.Path(__file__).parent
-URL: Final[str] = "https://cola5.github.io/fpdf2-textindex"
+DOC_URL: Final[str] = "https://cola5.github.io/fpdf2-textindex"
+GIT_URL: Final[str] = "https://github.com/CoLa5/fpdf2-textindex"
 
 
 def write_sitemap(path: pathlib.Path) -> None:  # noqa: D103
@@ -30,7 +31,7 @@ def write_sitemap(path: pathlib.Path) -> None:  # noqa: D103
             filename = (
                 file.relative_to(path).as_posix().replace("index.html", "")
             )
-            f.write(f"""\n<url><loc>{URL:s}/{filename:s}</loc></url>""")
+            f.write(f"""\n<url><loc>{DOC_URL:s}/{filename:s}</loc></url>""")
         f.write("""\n</urlset>""")
 
 
@@ -38,12 +39,12 @@ if __name__ == "__main__":
     pdoc.render.configure(
         docformat="google",
         edit_url_map={
-            "fpdf2_textindex": f"{URL:s}/blob/main/fpdf2_textindex/",
+            "fpdf2_textindex": f"{GIT_URL:s}/blob/main",
         },
         favicon="assets/favicon.svg",
         footer_text=f"fpdf2_textindex <b>v{fpdf2_textindex.__version__:s}</b>",
         logo="assets/logo.svg",
-        logo_link=URL,
+        logo_link=DOC_URL,
         search=True,
         template_directory=HERE / "pdoc_template",
     )
