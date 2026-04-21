@@ -1,3 +1,8 @@
+[![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat)](https://www.gnu.org/licenses/gpl-3.0)
+[![CI](https://github.com/CoLa5/fpdf2-textindex/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/CoLa5/fpdf2-textindex/actions/workflows/ci.yml)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/CoLa5/fpdf2_textindex/blob/main/.pre-commit-config.yaml)
+[![GitHub last commit](https://img.shields.io/github/last-commit/py-pdf/fpdf2)](https://github.com/CoLa5/fpdf2_textindex/commits/master)
+
 # fpdf2 Text Index
 
 Adds a **text index** to [fpdf2](https://github.com/py-pdf/fpdf2), based on the
