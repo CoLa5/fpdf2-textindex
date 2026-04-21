@@ -31,7 +31,7 @@ runs:
 
     - name: Install dependencies
       run: |
-        if [ "${{ github.event.inputs.docs }}" = "true" ]; then
+        if [ "${{ inputs.docs }}" = "true" ]; then
           uv sync --locked --all-extras --group docs
         else
           uv sync --locked --all-extras --dev
