@@ -42,7 +42,12 @@ if __name__ == "__main__":
             "fpdf2_textindex": f"{GIT_URL:s}/blob/main",
         },
         favicon="assets/favicon.svg",
-        footer_text=f"fpdf2_textindex <b>v{fpdf2_textindex.__version__:s}</b>",
+        footer_text=(
+            f'<a href="{GIT_URL:s}/releases/tag/'
+            f'v{fpdf2_textindex.__version__:s}">'
+            f"fpdf2_textindex <b>v{fpdf2_textindex.__version__:s}</b>"
+            f"</a>"
+        ),
         logo="assets/logo.svg",
         logo_link=DOC_URL,
         search=True,
