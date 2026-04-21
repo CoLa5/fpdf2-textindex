@@ -48,7 +48,9 @@ class IndexPlaceholder(NamedTuple):
     reset_page_indices: bool = True
 
 
-class FPDF(fpdf.FPDF):  # noqa: D101
+class FPDF(fpdf.FPDF):
+    """PDF Generation Class."""
+
     if TYPE_CHECKING:
         _index_allow_page_insertion: bool
         _index_links: dict[str, int]
@@ -56,12 +58,12 @@ class FPDF(fpdf.FPDF):  # noqa: D101
         index_placeholder: IndexPlaceholder | None
 
     CONCORDANCE_FILE: os.PathLike[str] | str | None = None
-    """The path to a concordance file."""
+    """The path to a concordance file. Defaults to `None`."""
 
     STRICT_INDEX_MODE: bool = True
-    """If ``True`` and an entry has a normal reference (locator) and a SEE-cross
-    reference, a ``ValueError`` will be raised. Else, it will just be a warning.
-    Defaults to ``True``.
+    """If `True` and an entry has a normal reference (locator) and a SEE-cross
+    reference, a `ValueError` will be raised. Else, it will just be a warning.
+    Defaults to `True`.
     """
 
     def __init__(
@@ -73,6 +75,27 @@ class FPDF(fpdf.FPDF):  # noqa: D101
         *,
         enforce_compliance: DocumentCompliance | str | None = None,
     ) -> None:
+        """Initializes the :py:class:`FPDF`.
+
+        Args:
+            orientation: Page orientation. Possible values are `"portrait"` (can
+                be abbreviated `"P"`) or `"landscape"` (can be abbreviated
+                `"L"`). Defaults to `"portrait"`.
+            unit: Possible values are `"pt"`, `"mm"`, `"cm"`, `"in"`, or a
+                number. A point equals 1/72 of an inch, that is to say about
+                0.35 mm (an inch being 2.54 cm). This is a very common unit in
+                typography; font sizes are expressed in this unit.
+                If given a number, then it will be treated as the number of
+                points per unit (eg. 72 = 1 in). Default to `"mm"`.
+            format: Page format. Possible values are `"a3"`, `"a4"`, `"a5"`,
+                `"letter"`, `"legal"` or a tuple `(width, height)` expressed in
+                the given unit. Default to `"a4"`.
+            font_cache_dir: [**DEPRECATED since v2.5.1**] unused.
+            enforce_compliance: When enforce compliance is set, :py:class:`FPDF`
+                actively prevents non-compliant operations and will raise errors
+                if you try something forbidden for the selected profile.
+                Defaults to `None`.
+        """
         super().__init__(
             orientation=orientation,
             unit=unit,
@@ -88,7 +111,8 @@ class FPDF(fpdf.FPDF):  # noqa: D101
         self._index_allow_page_insertion = False
         self._index_links = {}
         self._index_parser = TextIndexParser(strict=self.STRICT_INDEX_MODE)
-        self.index_placeholder = None
+        self.index_placeholder: IndexPlaceholder | None = None
+        """Index placeholder. Defaults to ``None``."""
 
     def _set_index_link_locations(self) -> None:
         link_locations = {}
@@ -279,7 +303,7 @@ class FPDF(fpdf.FPDF):  # noqa: D101
 
     @property
     def index_entries(self) -> list[TextIndexEntry]:
-        """Returns the parsed index entries."""
+        """The (so far parsed) index entries."""
         return self._index_parser.entries
 
     def add_index_entry(
@@ -294,7 +318,7 @@ class FPDF(fpdf.FPDF):  # noqa: D101
 
         Args:
             label_path: The label path of the entry.
-            sort_key: The sort key of the entry. Defaults to ``None``.
+            sort_key: The sort key of the entry. Defaults to `None`.
 
         Returns:
             The text index entry.
@@ -320,25 +344,26 @@ class FPDF(fpdf.FPDF):  # noqa: D101
         Args:
             render_index_function: A function that will be invoked to  render
                 the Index. This function will receive 2 parameters:
-                - `pdf`, an instance of FPDF,
-                - `entries`, a list of `TextIndexEntry`.
-            pages: the number of pages that the Index will span, including the
+                    `pdf`: an instance of :py:class:`fpdf2_textindex.pdf.FPDF`;
+                    `entries`: a list of
+                        :py:class:`fpdf2_textindex.interface.TextIndexEntry`s.
+            pages: The number of pages that the Index will span, including the
                 current one. As many page breaks as the value of this argument
                 will occur immediately after calling this method. Defaults to
-                ``1``.
-            allow_extra_pages: If set to ``True``, allows for an unlimited
+                `1`.
+            allow_extra_pages: If set to `True`, allows for an unlimited
                 number of extra pages in the Text Index, which may cause
                 discrepancies with pre-rendered page numbers.
                 For consistent numbering, using page labels to create a separate
                 numbering style for the Index is recommended. Defaults to
-                ``False``.
+                `False`.
             reset_page_indices : Whether to reset the pages indices after the
-                Text Index. Defaults to ``True``.
+                Text Index. Defaults to `True`.
 
         Raises:
             FPDFException: If an index placeholder has been inserted before.
-            TypeError: If ``render_index_function`` is not callable.
-            ValueError: If ``pages`` is less than ``1``.
+            TypeError: If `render_index_function` is not callable.
+            ValueError: If ``pages`` is less than `1`.
         """
         if not callable(render_index_function):
             msg = (
@@ -398,70 +423,73 @@ class FPDF(fpdf.FPDF):  # noqa: D101
 
         They can be automatic (breaking at the most recent space or soft-hyphen
         character) as soon as the text reaches the right border of the cell, or
-        explicit (via the ``"\\n"`` character). As many cells as necessary are
+        explicit (via the `"\\n"` character). As many cells as necessary are
         stacked, one below the other. Text can be aligned, centered or
         justified. The cell block can be framed and the background painted. A
         cell has an horizontal padding, on the left & right sides, defined by
-        the :py:attr:`FPDF.c_margin`-property.
+        the
+        [:py:attr:`fpdf.FPDF.c_margin`](https://py-pdf.github.io/fpdf2/fpdf/fpdf.html)-property.
 
         Note:
             Using
-            ``new_x=XPos.RIGHT, new_y=XPos.TOP, maximum height=pdf.font_size``
+            `new_x=XPos.RIGHT, new_y=XPos.TOP, maximum height=pdf.font_size`
             is useful to build tables with multiline text in cells.
 
         Args:
-            w: Cell width. If ``0``, they extend up to the right margin of the
+            w: Cell width. If `0`, they extend up to the right margin of the
                 page.
-            h: Height of a single line of text. Defaults to ``None``, meaning to
+            h: Height of a single line of text. Defaults to `None`, meaning to
                 use the current font size.
             text: Text to print.
             border: Indicates if borders must be drawn around the cell.
-                The value can be either a number (``0``: no border; ``1``:
+                The value can be either a number (`0`: no border; `1`:
                 frame) or a string containing some or all of the following
                 characters (in any order):
-                - ``"L"``: left,
-                - ``"T"``: top,
-                - ``"R"``: right,
-                - ``"B"``: bottom.
-                Defaults to ``0``.
+                `"L"`: left,
+                `"T"`: top,
+                `"R"`: right,
+                `"B"`: bottom.
+                Defaults to `0`.
             align: Sets the text alignment inside the cell.
                 Possible values are:
-                - ``"J"``: justify (default value),
-                - ``"L"`` / ``""``: left align,
-                - ``"C"``: center,
-                - ``"X"``: center around current x position, or
-                - ``"R"``: right align-
-            fill: Indicates if the cell background must be painted (``True``)
-                or transparent (``False``). Defaults to ``False``.
-            split_only: **DEPRECATED since 2.7.4**: Use ``dry_run=True`` and
-                ``output=("LINES",)`` instead.
+                `"J"`: justify (default value),
+                `"L"` / `""`: left align,
+                `"C"`: center,
+                `"X"`: center around current x-position, or
+                `"R"`: right align.
+            fill: Indicates if the cell background must be painted (`True`)
+                or transparent (`False`). Defaults to `False`.
+            split_only: **DEPRECATED since 2.7.4**: Use `dry_run=True` and
+                `output=("LINES",)` instead.
             link: Optional link to add on the cell, internal (identifier
-                returned by :py:meth:`FPDF.add_link`) or external URL.
+                returned by [:py:meth:`fpdf.FPDF.add_link`](https://py-pdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.add_link)
+                or external URL.
             new_x: New current position in x after the call. Defaults to
-                :py:attr:`fpdf.XPos.RIGHT`.
+                [:py:attr:`fpdf.XPos.RIGHT`](https://py-pdf.github.io/fpdf2/fpdf/enums.html#fpdf.enums.XPos).
             new_y: New current position in y after the call. Defaults to
-                :py:attr:`fpdf.YPos.NEXT`.
-            ln: **DEPRECATED since 2.5.1**: Use ``new_x`` and ``new_y`` instead.
+                [:py:attr:`fpdf.YPos.NEXT`](https://py-pdf.github.io/fpdf2/fpdf/enums.html#fpdf.enums.YPos).
+            ln: **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
             max_line_height: Optional maximum height of each sub-cell generated.
-                Defaults to ``None``.
+                Defaults to `None`.
             markdown: Enables minimal markdown-like markup to render part
                 of text as bold / italics / strikethrough / underlined.
-                Supports ``"\\"`` as escape character. Defaults to ``False``.
-            print_sh: Treat a soft-hyphen (``"\\u00ad"``) as a normal printable
+                Supports `"\\"` as escape character. Defaults to `False`.
+            print_sh: Treat a soft-hyphen (`"\\u00ad"`) as a normal printable
                 character, instead of a line breaking opportunity. Defaults to
-                ``False``.
-            wrapmode: :py:attr:`fpdf.enums.WrapMode.WORD` for word based line
-                wrapping (default) or :py:attr:`fpdf.enums.WrapMode.CHAR` for
-                character based line wrapping.
-            dry_run: If ``True``, does not output anything in the document.
-                Can be useful when combined with ``output``. Defaults to
-                ``False``.
+                `False`.
+            wrapmode: [:py:attr:`fpdf.enums.WrapMode.WORD`](https://py-pdf.github.io/fpdf2/fpdf/enums.html#fpdf.enums.WrapMode)
+                for word based line wrapping (default) or
+                [:py:attr:`fpdf.enums.WrapMode.CHAR`](https://py-pdf.github.io/fpdf2/fpdf/enums.html#fpdf.enums.WrapMode)
+                for character based line wrapping.
+            dry_run: If `True`, does not output anything in the document.
+                Can be useful when combined with `output`. Defaults to
+                `False`.
             output: Defines what this method returns. If several enum values are
                 joined, the result will be a tuple.
             txt: [**DEPRECATED since v2.7.6**] string to print.
             center: Center the cell horizontally on the page. Defaults to
-                ``False``.
-            padding: Padding to apply around the text. Defaults to ``0``.
+                `False`.
+            padding: Padding to apply around the text. Defaults to `0`.
                 When one value is specified, it applies the same padding to all
                 four sides.
                 When two values are specified, the first padding applies to the
@@ -472,17 +500,17 @@ class FPDF(fpdf.FPDF):  # noqa: D101
                 When four values are specified, the paddings apply to the top,
                 right, bottom, and left in that order (clockwise)
                 If padding for left or right ends up being non-zero then the
-                respective :py:attr:`FPDF.c_margin` is ignored.
-                Center overrides values for horizontal padding
-            first_line_indent: The indent of the first line. Defaults to ``0``.
+                respective [:py:attr:`fpdf.FPDF.c_margin`](https://py-pdf.github.io/fpdf2/fpdf/fpdf.html)
+                is ignored. Center overrides values for horizontal padding.
+            first_line_indent: The indent of the first line. Defaults to `0`.
 
         Returns:
-            A single value or a tuple, depending on the ``output`` parameter
+            A single value or a tuple, depending on the `output` parameter
             value.
 
         Raises:
             FPDFException: If no font has been set before.
-            ValueError: If ``w`` or ``h`` is a string.
+            ValueError: If `w` or `h` is a string.
         """  # noqa: DOC102
         padding = Padding.new(padding)
         wrapmode = WrapMode.coerce(wrapmode)
@@ -787,7 +815,7 @@ class FPDF(fpdf.FPDF):  # noqa: D101
         output_producer_class: type[OutputProducer] = OutputProducer,
     ) -> None: ...
 
-    def output(  # noqa: D417
+    def output(
         self,
         name: os.PathLike[str] | BinaryIO | str | Literal[""] | None = "",
         *,
@@ -796,23 +824,22 @@ class FPDF(fpdf.FPDF):  # noqa: D101
     ) -> bytearray | None:
         """Output PDF to some destination.
 
-        The method first calls [close](close.md) if necessary to terminate the
-        document. After calling this method, content cannot be added to the
-        document anymore.
-
         By default the bytearray buffer is returned.
         If a `name` is given, the PDF is written to a new file.
 
         Args:
-            name (str): optional File object or file path where to save the PDF
-                under.
-            output_producer_class (class): use a custom class for PDF file
-                generation.
+            name: Optional file object or file path where to save the PDF under.
+                Defaults to `""`.
+            linearize: Whether to use the
+                :py:class:`fpdf.output.LinearizedOutputProducer`. Defaults to
+                `False`.
+            output_producer_class: Use a custom class for PDF file generation.
+                Defaults to :py:class:`fpdf.output.OutputProducer`.
 
         Returns:
             If a `name` is given, the PDF will be written to a new file and
-            ``None`` will be returned. Else, a bytearray buffer is returned,
-            compirsing the PDF.
+            `None` will be returned. Else, a bytearray buffer is returned,
+            comprising the PDF.
 
         Raises:
             PDFAComplianceError: If the compliance requires at least one

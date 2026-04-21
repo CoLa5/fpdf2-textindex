@@ -63,11 +63,11 @@ class TextIndexParser:
         """Initializes the parser.
 
         Args:
-            strict: If ``True`` and an entry will have a normal reference
-                (locator) and a SEE-cross reference, a ``ValueError`` will be
+            strict: If `True` and an entry will have a normal reference
+                (locator) and a SEE-cross reference, a `ValueError` will be
                 raised. Else, it will just be a warning and the SEE-cross
                 reference will be automatically converted to SEE ALSO.
-                Defaults to ``True``.
+                Defaults to `True`.
         """
         self._alias_reg = AliasRegistry()
         self._enabled = True
@@ -113,16 +113,16 @@ class TextIndexParser:
     ) -> tuple[TextIndexEntry | None, bool]:
         """Returns an entry by its label path.
 
-        If ``create=True`` and the entry does not exist, it will be created.
+        If `create=True` and the entry does not exist, it will be created.
 
         Args:
             label_path: The label path.
             create: Whether to create the entry if it does not exist already.
-                Defaults to ``False``.
+                Defaults to `False`.
 
         Returns:
-            The found :py:class:`TextIndexEntry` or ``None`` and whether the
-            entry has existed before.
+            The found :py:class:`fpdf2_textindex.TextIndexEntry` or `None` and
+            whether the entry has existed before.
         """
         created = False
         node = self._root
@@ -154,10 +154,9 @@ class TextIndexParser:
 
         Raises:
             RuntimeError: If a directive cannot be parsed.
-            ValueError:
-                - If the label cannot be identified correctly.
-                - If ``strict=True`` and and adding a SEE-cross reference to an
-                  entry with former "normal" reference (locator) or viceversa.
+            ValueError: If the label cannot be identified correctly.
+                If `strict=True` and and adding a SEE-cross reference to an
+                entry with a former "normal" reference (locator) or viceversa.
         """  # noqa: DOC502
         LOGGER.info("Parsing text by index parser")
 

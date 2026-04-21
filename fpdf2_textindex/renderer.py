@@ -56,18 +56,30 @@ class _AlsoPseudoEntry:
 class TextIndexRenderer:
     """Text Index (Writer).
 
-    A reference implementation of a Text Index to use with :py:mod:`fpdf2`.
+    A reference implementation of a Text Index to use with [fpdf2](https://py-pdf.github.io/fpdf2/index.html).
 
     This class provides a customizable Text Index that can be used directly or
-    subclassed for additional functionality. To use this class, create an
-    instance of `TextIndex`, configure it as needed, and pass its
-    ``render_index``-method as ``render_index_function``-argument to
-    :py:meth:`fpdf.FPDF.insert_index_placeholder`.
+    subclassed for additional functionality.
+    To use this class, create an instance of :py:class:`TextIndexRenderer`,
+    configure it as needed, and pass its
+    :py:meth:`TextIndexRenderer.render_text_index`-method as
+    `render_index_function`-argument to
+    :py:meth:`fpdf2_textindex.pdf.FPDF.insert_index_placeholder`.
     """
 
     if TYPE_CHECKING:
         _cur_header: str | None
         _link_locations: dict[str, LinkLocation]
+        border: bool
+        ignore_same_page_refs: bool
+        level_indent: float
+        line_spacing: float
+        max_outline_level: int
+        outline_level: int
+        run_in_style: bool
+        show_header: bool
+        sort_emph_first: bool
+        text_styles: list[fpdf.TextStyle]
 
     def __init__(
         self,
@@ -87,34 +99,34 @@ class TextIndexRenderer:
 
         Args:
             border: Whether to show borders around the entries and headers.
-                Mainly for debugging purposes. Defaults to ``False``.
+                Mainly for debugging purposes. Defaults to `False`.
             ignore_same_page_refs: Whether to ignore references (locators) to
                 the same PDF page (default), else same pages will be printed
                 multiple times.
             level_indent: The indent to add per entry depth to the left of the
-                entry. Defaults to ``7.5`` times the :py:attr:`fpdf.FPDF.unit`.
+                entry. Defaults to `7.5` times the
+                [fpdf.FPDF.unit](https://py-pdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF).
             line_spacing: The spacing between lines as multiple of the font
-                size. Defaults to ``None``, meaning ``1.0``.
-            max_outline_level: If ``outline_level`` >= 0, ``max_outline_level``
+                size. Defaults to `None`, meaning `1.0`.
+            max_outline_level: If `outline_level` >= 0, `max_outline_level`
                 will decide how many deeper entries will be added to the PDF
-                outline. Defaults to ``None``, meaning that no liimit is set.
-            outline_level: If ``outline_level`` >= 0, the first entry depth will
+                outline. Defaults to `None`, meaning that no liimit is set.
+            outline_level: If `outline_level` >= 0, the first entry depth will
                 be added at this outline level to the PDF. If
-                ``show_header=True``, the headers will be added at this outline
-                level to the PDF. Defaults to ``None``, meaning to not show the
+                `show_header=True`, the headers will be added at this outline
+                level to the PDF. Defaults to `None`, meaning to not show the
                 entries (or headers) in the PDF outline.
             run_in_style: Whether to print the deepest entry levels at "run-in"-
-                style (>2). Defaults to ``True``.
-            show_header: Whether to show the headers. Defaults to ``False``.
+                style (>2). Defaults to `True`.
+            show_header: Whether to show the headers. Defaults to `False`.
             sort_emph_first: Whether to show emphasized references (locators)
-                first. Defaults to ``False``.
+                first. Defaults to `False`.
             text_styles: The text styles to use to print the entries at the
-                different depths. If ``show_header=True``, the first text style
+                different depths. If `show_header=True`, the first text style
                 refers to the style of the headers. If an entry is "deeper" than
                 there are text styles, the renderer will fall back to deepest
-                given text style. Defaults to ``None``, meaning to use an empty
-                text style and thus the last used one before rendering the text
-                index.
+                given text style. Defaults to `None`, meaning to take the
+                text style of the last PDF page.
         """  # noqa: DOC501
         self.border = border
         self.ignore_same_page_refs = bool(ignore_same_page_refs)
@@ -150,16 +162,16 @@ class TextIndexRenderer:
         """Renders the text index.
 
         Note:
-            Use this method as ``render_index_function``-argument in
-            :py:meth:`fpdf.FPDF.insert_index_placeholder`.
+            Use this method as `render_index_function`-argument in
+            `fpdf2_textindex.pdf.FPDF.insert_index_placeholder`.
 
         Args:
-            pdf: The :py:class:`fpdf.FPDF`-instance to render in.
+            pdf: The `fpdf2_textindex.pdf.FPDF`-instance to render in.
             entries: The list of entries to render.
 
         Raises:
-            ValueError: If a textstyle has a :py:class:`fpdf.Align`-value as
-                left margin.
+            ValueError: If a textstyle has a [fpdf.Align](https://py-pdf.github.io/fpdf2/fpdf/enums.html#fpdf.enums.Align)
+                -value as left margin.
         """  # noqa: DOC502
         assert pdf.index_placeholder is not None
 

@@ -34,7 +34,7 @@ class MDEmphasis(enum.IntFlag):
 
     @property
     def font_style(self) -> str:
-        """The corresponding :py:attr:`fpdf.FPDF.font_style`."""
+        """The corresponding [fpdf.FPDF.font_style](https://py-pdf.github.io/fpdf2/fpdf/graphics_state.html#fpdf.graphics_state.GraphicsState.font_style)."""
         return "".join(
             str(mde.name)[0] for mde in type(self) if mde.value & self
         )
@@ -48,11 +48,11 @@ class MDEmphasis(enum.IntFlag):
 
     @property
     def text_emphasis(self) -> fpdf.enums.TextEmphasis:
-        """The corresponding :py:class:`fpdf.enums.TextEmphasis`."""
+        """The corresponding [fpdf.enums.TextEmphasis](https://py-pdf.github.io/fpdf2/fpdf/enums.html#fpdf.enums.TextEmphasis)."""
         return fpdf.enums.TextEmphasis.coerce(self.font_style)
 
     def format(self, text: str) -> str:
-        """Formats a text according to this Markdown Emphasis.
+        """Formats a text according to this :py:class:`MDEmphasis`.
 
         Args:
             text: The text to format.

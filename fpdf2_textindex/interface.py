@@ -100,7 +100,7 @@ class CrossReferenceType(enum.StrEnum):
     """Cross Reference Type."""
 
     NONE = enum.auto()
-    """None."""
+    """No cross reference."""
 
     SEE = enum.auto()
     """SEE-cross reference."""
@@ -124,8 +124,14 @@ class Node(_LabelPathABC):
     _next_id: ClassVar[int] = 0
 
     id: int = dataclasses.field(init=False)
+    """The id."""
+
     label: str
+    """The label."""
+
     parent: Self | None = None
+    """The parent."""
+
     _children: list[Self] = dataclasses.field(default_factory=list, init=False)
 
     def __post_init__(self) -> None:
@@ -170,10 +176,13 @@ class Node(_LabelPathABC):
     def depth(self) -> int:
         """The depth.
 
-        - (invisible) root: 0
-        - entries: 1
-        - subentries: 2
-        - sub-subentries: 3
+        Possible values are:
+        - (invisible) root: 0,
+        - entries: 1,
+        - subentries: 2,
+        - sub-subentries: 3.
+
+        Deeper entries are not recommended.
         """
         return sum(1 for _ in self.iter_parents()) + 1
 
@@ -185,7 +194,7 @@ class Node(_LabelPathABC):
         )
 
     def add_child(self, child: Self) -> None:
-        """Adds a child to the node.
+        """Adds a child.
 
         Args:
             child: The child to add.
@@ -200,13 +209,13 @@ class Node(_LabelPathABC):
         self._children.append(child)
 
     def get_child(self, label: str) -> Self | None:
-        """Returns a child by its label or ``None`` if not existing.
+        """Returns a child by its label or `None` if not existing.
 
         Args:
             label: The label to search by.
 
         Returns:
-            The child with the label or ``None`` if not existing.
+            The child with the label or `None` if not existing.
         """
         for child in self.children:
             if child.label == label:
@@ -228,7 +237,8 @@ class Node(_LabelPathABC):
         """Iterates over the parents without the root (going up).
 
         Yields:
-            The parent, grandparent, great-grandparent, ..., and so forth.
+            The parent, grandparent, great-grandparent, ..., and so forth,
+            stopping before root.
         """
         # Do not yield root
         if self.parent is None:
@@ -247,7 +257,7 @@ class Reference:
     """The start id of the reference."""
 
     start_suffix: str | None = None
-    """The start suffix of the reference or ``None``."""
+    """The start suffix of the reference or `None`."""
 
     start_location: LinkLocation | None = dataclasses.field(
         default=None, init=False
@@ -255,10 +265,10 @@ class Reference:
     """The start (link) location in the document the reference is set at."""
 
     end_id: int | None = dataclasses.field(default=None, init=False)
-    """The end id of the reference or ``None``."""
+    """The end id of the reference or `None`."""
 
     end_suffix: str | None = dataclasses.field(default=None, init=False)
-    """The end suffix of the reference or ``None``."""
+    """The end suffix of the reference or `None`."""
 
     end_location: LinkLocation | None = dataclasses.field(
         default=None, init=False
@@ -335,13 +345,13 @@ class TextIndexEntry(Node):
             id: The id of the cross reference.
             cross_ref_type: The type of the cross reference.
             label_path: The label path of the cross reference.
-            strict: Whether to raise a ``ValueError`` if adding a SEE-cross
+            strict: Whether to raise a `ValueError` if adding a SEE-cross
                 reference to an entry with former "normal" reference (locator).
-                Else, it will be just warned.
-                Defaults to ``True``.
+                Else, it will just be a warning and the SEE-cross reference will
+                be automatically converted to SEE ALSO. Defaults to `True`.
 
         Raises:
-            ValueError: If ``strict=True`` and adding a SEE-cross reference to
+            ValueError: If `strict=True` and adding a SEE-cross reference to
                 an entry with former "normal" reference (locator).
         """
         if self.references and cross_ref_type == CrossReferenceType.SEE:
@@ -381,16 +391,16 @@ class TextIndexEntry(Node):
         Args:
             start_id: The start id of the reference.
             locator_emphasis: Whether to emphasize the locator of the reference.
-                Defaults to ``False``.
+                Defaults to `False`.
             start_suffix: The start suffix of the reference. Defaults to
-                ``None``.
-            strict: Whether to raise a ``ValueError`` if adding a SEE-cross
+                `None`.
+            strict: Whether to raise a `ValueError` if adding a SEE-cross
                 reference to an entry with former "normal" reference (locator).
-                Else, it will be just warned.
-                Defaults to ``True``.
+                Else, it will just be a warning and the SEE-cross reference will
+                be automatically converted to SEE ALSO. Defaults to `True`.
 
         Raises:
-            ValueError: If ``strict=True`` and adding a reference locator to an
+            ValueError: If `strict=True` and adding a reference locator to an
                 entry with former SEE-cross reference.
         """
         if any(
@@ -431,7 +441,7 @@ class TextIndexEntry(Node):
         Args:
             end_id: The end id of the latest reference.
             end_suffix: The end suffix of the latest reference. Defaults to
-                ``None``.
+                `None`.
 
         Raises:
             RuntimeError: If there has been no reference before.

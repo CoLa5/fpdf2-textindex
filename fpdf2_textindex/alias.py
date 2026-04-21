@@ -1,4 +1,4 @@
-"""Aliases."""
+"""Alias Registry."""
 
 from collections.abc import Iterable, Iterator, Mapping
 import logging
@@ -10,7 +10,10 @@ from fpdf2_textindex.interface import Alias
 
 
 class AliasRegistry(Mapping[str, Alias]):
-    """Alias Registry."""
+    """Alias Registry.
+
+    Maps an alias by a name `"#alias"` to an entry by its label path.
+    """
 
     _ALIAS_PREFIX: Final[Literal["#"]] = "#"
     _ALIAS_TOKEN_PATTERN: re.Pattern[str] = re.compile(
@@ -184,9 +187,9 @@ class AliasRegistry(Mapping[str, Alias]):
             directive_str: The original directive.
 
         Returns:
-            The directive without the alias,
-            the found alias name (or ``None`` in case of no alias directive),
-            and the start index of the alias (or ``-1`` in case of no alias
+            A tuple comprising the directive without the alias,
+            the found alias name (or `None` in case of no alias directive),
+            and the start index of the alias (or `-1` in case of no alias
             directive).
         """
         match = self._ALIAS_DEFINITION_PATTERN.search(directive_str)

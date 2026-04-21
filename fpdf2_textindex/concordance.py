@@ -12,7 +12,11 @@ from fpdf2_textindex.utils import insert_at_match
 
 
 class ConcordanceList(Sequence[tuple[str, str]]):
-    """Concordance List."""
+    """Concordance List.
+
+    The class can load a concordance list from a file and parse a text by it,
+    replacing matched terms by text index directives.
+    """
 
     _LEADING_BRACKET_SPAN: Final[str] = (
         r"(?<!\\)\[(?P<leading_bracket_span>[^\]<>]+)(?<!\\)\]"
@@ -63,7 +67,7 @@ class ConcordanceList(Sequence[tuple[str, str]]):
 
         Args:
             filepath: The filepath.
-            separator: The separator. Defaults to ``"\t"``.
+            separator: The separator. Defaults to `"\t"`.
 
         Returns:
             The corresponding :py:class:`ConcordanceList`-instance.
@@ -128,7 +132,7 @@ class ConcordanceList(Sequence[tuple[str, str]]):
 
     def parse_text(self, text: str) -> str:
         """Parses a text and replaces found terms from the concordance list by
-        the corresponding directive.
+        the corresponding directives.
 
         Args:
             text: The text to parse.
