@@ -1,4 +1,4 @@
-[![Documentation](https://img.shields.io/badge/docs-github.io-blue?logo=googledocs&logoColor=white)](https://cola5.github.io/fpdf2-textindex)
+[![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://cola5.github.io/fpdf2-textindex)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat)](https://www.gnu.org/licenses/gpl-3.0)
 
 [![CI](https://github.com/CoLa5/fpdf2-textindex/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/CoLa5/fpdf2-textindex/actions/workflows/ci.yml)
