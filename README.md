@@ -1,7 +1,9 @@
+[![Documentation](https://img.shields.io/badge/docs-github.io-blue?logo=googledocs&logoColor=white)](https://cola5.github.io/fpdf2-textindex)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat)](https://www.gnu.org/licenses/gpl-3.0)
+
 [![CI](https://github.com/CoLa5/fpdf2-textindex/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/CoLa5/fpdf2-textindex/actions/workflows/ci.yml)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/CoLa5/fpdf2_textindex/blob/main/.pre-commit-config.yaml)
-[![GitHub last commit](https://img.shields.io/github/last-commit/py-pdf/fpdf2)](https://github.com/CoLa5/fpdf2_textindex/commits/master)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/CoLa5/fpdf2-textindex/blob/main/.pre-commit-config.yaml)
+[![GitHub last commit](https://img.shields.io/github/last-commit/CoLa5/fpdf2-textindex)](https://github.com/CoLa5/fpdf2-textindex/commits/main)
 
 # fpdf2 Text Index
 
@@ -29,8 +31,9 @@ pdf.output("example.pdf")
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
 directives in a text:
 
-> Most mechanical keyboard firmware{^} supports the use of [key
-> combinations]{^}.
+> Most mechanical keyboard firmware{^} supports the use of [key > > > > > > > >
+>
+> > combinations]{^}.
 
 Print it in the PDF by enabling markdown in `fpdf2.FPDF.cell` or
 `fpdf2.FPDF.multi_cell`:
