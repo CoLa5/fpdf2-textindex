@@ -61,8 +61,8 @@ ENV/
 env.bak/
 venv.bak/
 
-# mkdocs documentation
-/site
+# Documentation
+public/
 
 # mypy
 .mypy_cache/

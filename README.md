@@ -22,7 +22,7 @@ pdf.output("example.pdf")
 ## Adding a Text Index Entry
 
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
-marks in a text:
+directives in a text:
 
 > Most mechanical keyboard firmware{^} supports the use of [key
 > combinations]{^}.

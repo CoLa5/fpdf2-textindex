@@ -1,16 +1,14 @@
 name: "Setup uv environment"
 description: "Install system deps, Python, uv, and project dependencies"
-on:
-  workflow_dispatch:
-    inputs:
-      docs:
-        description: "Enable --docs flag for uv sync"
-        required: false
-        default: "false"
-        type: choice
-        options:
-          - "false"
-          - "true"
+inputs:
+  docs:
+    type: choice
+    description: "Enable --group docs flag for uv sync"
+    required: false
+    default: "false"
+    options:
+      - "false"
+      - "true"
 runs:
   using: "composite"
   steps:
@@ -33,7 +31,7 @@ runs:
 
     - name: Install dependencies
       run: |
-        if [ "${{ github.event.inputs.docs }}" = "true" ]; then
+        if [ "${{ inputs.docs }}" = "true" ]; then
           uv sync --locked --all-extras --group docs
         else
           uv sync --locked --all-extras --dev
