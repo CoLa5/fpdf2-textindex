@@ -1,6 +1,6 @@
 """
 .. include:: ../README.md
-   :start-line: 6
+   :start-line: 8
 
 The module gives direct access to some classes defined in submodules:
 
