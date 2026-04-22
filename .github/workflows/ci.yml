@@ -62,30 +62,6 @@ jobs:
           name: artifact-coverage
           path: public/
 
-  example-pdf:
-    name: Example PDF
-    if: github.ref == 'refs/heads/main'
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: ./.github/actions/setup-uv
-
-      - name: Create example pdf
-        run: |
-          uv run python textindex_figures.py
-          mkdir -p public/assets
-          cp textindex_figures.pdf public/assets/
-
-      - name: Upload example artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifact-example
-          path: public/
-
   docs:
     name: Build Docs
     if: github.ref == 'refs/heads/main'
@@ -109,10 +85,34 @@ jobs:
           name: artifact-docs
           path: public/
 
+  example:
+    name: Example PDF
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-uv
+
+      - name: Create example pdf
+        run: |
+          uv run python example/textindex_figures.py
+          mkdir -p public/assets
+          cp textindex_figures.pdf public/assets/
+
+      - name: Upload example artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-example
+          path: public/
+
   pages-collect:
     name: Collect Docs
     if: github.ref == 'refs/heads/main'
-    needs: [test, docs]
+    needs: [test, docs, example]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8.0.1
