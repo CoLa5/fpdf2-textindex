@@ -76,10 +76,9 @@ jobs:
 
       - name: Create example pdf
         run: |
-          cd example
           uv run python textindex_figures.py
           mkdir -p public/assets
-          cp textindex_figures.pdf ../public/assets/
+          cp textindex_figures.pdf public/assets/
 
       - name: Upload example artifact
         uses: actions/upload-artifact@v4
