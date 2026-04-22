@@ -49,7 +49,7 @@ jobs:
           # Create HTML coverage files if in main-branch
           COV_HTML=""
           if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
-            COV_HTML="--cov-report html:public/coverage"
+            COV_HTML="--cov-report html"
           fi
           # Executing all test
           uv run pytest \

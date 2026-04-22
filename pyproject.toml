@@ -81,11 +81,12 @@ exclude_also = [
   # Don't complain about abstract methods, they aren't run:
   "@(abc\\.)?abstractmethod",
 ]
-
 ignore_errors = true
+precision = 2
 
 [tool.coverage.html]
-directory = "coverage_html_report"
+directory = "public/coverage/"
+title = "Coverage report of fpdf2_textindex"
 
 [tool.mypy]
 python_version = "3.12"
