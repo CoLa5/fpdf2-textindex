@@ -12,7 +12,7 @@ license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 
 authors = [
-    { name = "Corvin Lasogga", email = "c.lasogga@gmail.com" }
+  { name = "Corvin Lasogga", email = "c.lasogga@gmail.com" }
 ]
 
 keywords = ["pdf", "library", "markdown", "index", "textindex"]
@@ -30,18 +30,19 @@ classifiers = [
 ]
 
 dependencies = [
-    "fpdf2",
+  "fpdf2",
 ]
 
 [dependency-groups]
 dev = [
-    "pre-commit>=4.5.1",
-    "pylint>=4.0.5",
-    "pytest>=9.0.3",
-    "ruff>=0.15.11",
+  "pre-commit>=4.5.1",
+  "pylint>=4.0.5",
+  "pytest>=9.0.3",
+  "pytest-cov>=7.1.0",
+  "ruff>=0.15.11",
 ]
 docs = [
-    "pdoc>=16.0.0",
+  "pdoc>=16.0.0",
 ]
 
 [project.urls]
@@ -58,9 +59,42 @@ version_provider = "uv"
 update_changelog_on_bump = true
 major_version_zero = true
 
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+include = [
+  "fpdf2_textindex/*.py",
+  "fpdf2_textindex/**/*.py",
+]
+exclude_also = [
+  # Don't complain about missing debug-only code:
+  "def __repr__",
+
+  # Don't complain if tests don't hit defensive assertion code:
+  "raise AssertionError",
+  "raise NotImplementedError",
+
+  # Don't complain if non-runnable code isn't run:
+  "if __name__ == .__main__.:",
+
+  # Don't complain about abstract methods, they aren't run:
+  "@(abc\\.)?abstractmethod",
+]
+
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "coverage_html_report"
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
+
+[tool.pytest.ini_options]
+addopts = "--cov-report=xml --cov=fpdf2_textindex test/"
+log_cli = true
+log_cli_level = "WARN"
 
 [tool.ruff]
 line-length = 80
@@ -101,12 +135,12 @@ select = [
   "RUF"
 ]
 extend-ignore = [
-    # missing docstring in magic method
-    "D105",
-    # missing docstring in __init__
-    "D107",
-    # missing blank line after summary
-    "D205",
+  # missing docstring in magic method
+  "D105",
+  # missing docstring in __init__
+  "D107",
+  # missing blank line after summary
+  "D205",
 ]
 fixable = ["ALL"]
 unfixable = []
