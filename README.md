@@ -3,6 +3,7 @@
 
 [![CI](https://github.com/CoLa5/fpdf2-textindex/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/CoLa5/fpdf2-textindex/actions/workflows/ci.yml)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/CoLa5/fpdf2-textindex/blob/main/.pre-commit-config.yaml)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/CoLa5/d548905d5994ebc1c3f15e8cfb9003e2/raw/covbadge.json)](https://cola5.github.io/fpdf2-textindex/coverage/)
 [![GitHub last commit](https://img.shields.io/github/last-commit/CoLa5/fpdf2-textindex)](https://github.com/CoLa5/fpdf2-textindex/commits/main)
 
 # fpdf2 Text Index
@@ -106,7 +107,7 @@ numbering style of the first text index page
 ## Example
 
 An example can be created by
-[`example/textindex_figures.py`](https://github.com/CoLa5/fpdf2-textindex/blob/main/example/textindex_figures.py)
+[`example/textindex_figures.py`](https://github.com/CoLa5/fpdf2-textindex/blob/main/example/textindex_figures.py#L130)
 and produces
 [textindex_figures.pdf](https://cola5.github.io/fpdf2-textindex/assets/textindex_figures.pdf).
 

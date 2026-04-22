@@ -62,6 +62,25 @@ jobs:
           name: artifact-coverage
           path: public/
 
+      - name: Get total coverage
+        if: github.ref == 'refs/heads/main'
+        id: set_total
+        run: |
+          echo "total=$( uv run python -m coverage report --format=total )" >> $GITHUB_OUTPUT
+
+      - name: Create coverage badge
+        if: github.ref == 'refs/heads/main'
+        uses: schneegans/dynamic-badges-action@0e50b8bad39e7e1afd3e4e9c2b7dd145fad07501 # v1.8.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: d548905d5994ebc1c3f15e8cfb9003e2
+          filename: covbadge.json
+          label: Coverage
+          message: ${{ steps.set_total.outputs.total }}%
+          minColorRange: 60
+          maxColorRange: 95
+          valColorRange: ${{ steps.set_total.outputs.total }}
+
   docs:
     name: Build Docs
     if: github.ref == 'refs/heads/main'
