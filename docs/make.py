@@ -39,7 +39,7 @@ if __name__ == "__main__":
     pdoc.render.configure(
         docformat="google",
         edit_url_map={
-            "fpdf2_textindex": f"{GIT_URL:s}/blob/main",
+            "fpdf2_textindex": f"{GIT_URL:s}/blob/main/fpdf2_textindex/",
         },
         favicon="assets/favicon.svg",
         footer_text=(
