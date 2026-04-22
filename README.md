@@ -106,8 +106,9 @@ numbering style of the first text index page
 ## Example
 
 An example can be created by
-[`example/textindex_figures.py`](example/textindex_figures.py) and produces
-[textindex_figures.pdf](https://github.com/CoLa5/fpdf2-textindex/releases/download/example-pdf/textindex_figures.pdf).
+[`example/textindex_figures.py`](https://github.com/CoLa5/fpdf2-textindex/blob/main/example/textindex_figures.py)
+and produces
+[textindex_figures.pdf](https://cola5.github.io/fpdf2-textindex/assets/textindex_figures.pdf).
 
 ---
 
