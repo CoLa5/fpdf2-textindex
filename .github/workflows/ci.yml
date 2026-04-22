@@ -62,29 +62,24 @@ jobs:
           name: artifact-coverage
           path: public/
 
-  example-pdf:
-    name: Example PDF
-    if: github.ref == 'refs/heads/main'
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: ./.github/actions/setup-uv
-
-      - name: Create example pdf
+      - name: Get total coverage
+        if: github.ref == 'refs/heads/main'
+        id: set_total
         run: |
-          uv run python textindex_figures.py
-          mkdir -p public/assets
-          cp textindex_figures.pdf public/assets/
+          echo "total=$( uv run python -m coverage report --format=total )" >> $GITHUB_OUTPUT
 
-      - name: Upload example artifact
-        uses: actions/upload-artifact@v4
+      - name: Create coverage badge
+        if: github.ref == 'refs/heads/main'
+        uses: schneegans/dynamic-badges-action@0e50b8bad39e7e1afd3e4e9c2b7dd145fad07501 # v1.8.0
         with:
-          name: artifact-example
-          path: public/
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: d548905d5994ebc1c3f15e8cfb9003e2
+          filename: covbadge.json
+          label: Coverage
+          message: ${{ steps.set_total.outputs.total }}%
+          minColorRange: 60
+          maxColorRange: 95
+          valColorRange: ${{ steps.set_total.outputs.total }}
 
   docs:
     name: Build Docs
@@ -109,10 +104,34 @@ jobs:
           name: artifact-docs
           path: public/
 
+  example:
+    name: Example PDF
+    if: github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-uv
+
+      - name: Create example pdf
+        run: |
+          uv run python example/textindex_figures.py
+          mkdir -p public/assets
+          cp textindex_figures.pdf public/assets/
+
+      - name: Upload example artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-example
+          path: public/
+
   pages-collect:
     name: Collect Docs
     if: github.ref == 'refs/heads/main'
-    needs: [test, docs]
+    needs: [test, docs, example]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8.0.1
