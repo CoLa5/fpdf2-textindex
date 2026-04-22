@@ -14,7 +14,10 @@ runs:
   steps:
     - name: Install system dependencies
       run: |
-        sudo apt-get update --allow-releaseinfo-change && sudo apt-get install qpdf
+        sudo apt-get update --allow-releaseinfo-change
+        if [ "${{ inputs.docs }}" = "false" ]; then
+          sudo apt-get install qpdf
+        fi
       shell: bash
 
     - name: Set up Python
