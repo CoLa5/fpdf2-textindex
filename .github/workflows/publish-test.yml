@@ -1,10 +1,13 @@
-name: "Publish"
+name: Publish to Test.Pypi
 
 on:
   push:
     tags:
       # Publish on any tag starting with a `v`, e.g., v0.1.0
       - v*
+
+permissions:
+  contents: read
 
 jobs:
   run:
