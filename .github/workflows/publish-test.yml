@@ -34,15 +34,7 @@ jobs:
 
       - name: Check existing versions
         run: |
-          echo Versions already released on TestPypi: $(curl -Ls 'https://test.pypi.org/pypi/fpdf2_textindex/json' | jq -r '.releases|keys[]')
-          VERSION=$(uv run python -c "import importlib.metadata; print(importlib.metadata.version('fpdf2_textindex'))")
-          echo Current code version: $VERSION
-          # Checking if current code version has already been released:
-          if ! curl -Ls "https://test.pypi.org/pypi/fpdf2_textindex/json" \
-            | jq -r '.releases|keys[]' \
-            | grep "^$VERSION$"; then
-            echo "publish=yes" >> "$GITHUB_OUTPUT"
-          fi
+          echo "publish=yes" >> "$GITHUB_OUTPUT"
 
       - name: Publish
         if: steps.build.outputs.publish == 'yes'
