@@ -16,6 +16,8 @@ The module gives direct access to some classes defined in submodules:
 * :py:class:`fpdf2_textindex.TextIndexRenderer`
 """  # noqa: D212, D415
 
+# Monkey-patch fpdf bugs first
+import fpdf2_textindex._fpdf  # noqa: F401
 from fpdf2_textindex.interface import Alias
 from fpdf2_textindex.interface import CrossReference
 from fpdf2_textindex.interface import CrossReferenceType

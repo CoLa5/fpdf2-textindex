@@ -30,7 +30,7 @@ classifiers = [
 ]
 
 dependencies = [
-  "fpdf2",
+    "fpdf2>=2.8.7",
 ]
 
 [dependency-groups]
@@ -93,7 +93,7 @@ python_version = "3.12"
 strict = true
 
 [tool.pytest.ini_options]
-addopts = "--cov-report=xml --cov=fpdf2_textindex test/"
+addopts = "--cov-report=xml --cov=fpdf2_textindex"
 log_cli = true
 log_cli_level = "WARN"
 
@@ -174,5 +174,8 @@ docstring-code-line-length = "dynamic"
 module-name = "fpdf2_textindex"
 module-root = ""
 
-[tool.uv.sources]
-fpdf2 = { git = "https://github.com/CoLa5/fpdf2", rev = "dev" }
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true

@@ -80,37 +80,25 @@
     </text>
   </g>
   <g id="index-rects">
-    <!-- <rect
+    <rect
       x="72"
       y="156"
       width="116"
       height="32"
       fill="none"
       stroke="#3a74a6"
+      stroke-linejoin="round"
       stroke-width="4"
-    /> -->
-    <path
-      d="M132 156 l-60 0 l0 32 l18 0"
-      fill="none"
-      stroke="#3a74a6"
-      stroke-width="4"
-      stroke-linecap="round"
     />
-    <!-- <rect
+    <rect
       x="46"
       y="200"
       width="116"
       height="32"
       fill="none"
       stroke="#3a74a6"
+      stroke-linejoin="round"
       stroke-width="4"
-    /> -->
-    <path
-      d="M64 200 l-18 0 l0 32 l116 0 l0 -22 M122 200 l-28 0"
-      fill="none"
-      stroke="#3a74a6"
-      stroke-width="4"
-      stroke-linecap="round"
     />
   </g>
   <g id="snake">
@@ -123,6 +111,16 @@
         <use href="#eye" />
       </clipPath>
     </defs>
+    <path
+      id="outline"
+      d="M212 204 l0 -48 l-48 -6 l-66 24 l6 12
+         M113 186 l-24 6 l-24 2 l16.5 3 l-15 8 l30 -10 l36 -12
+         M104 186 l3 6 l78 16.5 Z"
+      fill="none"
+      stroke="#fff"
+      stroke-linejoin="round"
+      stroke-width="8"
+    />
     <path
       id="chest"
       d="M212 228 l0 -24 l-30 -13.5 l-30 1.5 l-48 -6 l3 6 l78 16.5 Z"
