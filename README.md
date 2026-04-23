@@ -1,5 +1,6 @@
-[![Pypi latest version](https://img.shields.io/pypi/v/fpdf2_textindex?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)](https://test.pypi.org/project/fpdf2_textindex#history)
+[![Pypi Latest Version](https://img.shields.io/pypi/v/fpdf2_textindex?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)](https://test.pypi.org/project/fpdf2_textindex#history)
 [![Python Support](https://img.shields.io/pypi/pyversions/fpdf2_textindex?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)](https://test.pypi.org/project/fpdf2_textindex/)
+[![Python Types](https://img.shields.io/pypi/types/fpdf2_textindex?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)](https://test.pypi.org/project/fpdf2_textindex/)
 [![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://cola5.github.io/fpdf2-textindex)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat)](https://www.gnu.org/licenses/gpl-3.0)
 
@@ -36,7 +37,7 @@ pdf.output("example.pdf")
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
 directives in a text:
 
-> Most mechanical keyboard firmware{^} supports the use of [key
+> Most mechanical keyboard firmware{^} supports the use of [key >
 > combinations]{^}.
 
 Print it in the PDF by enabling markdown in `fpdf2.FPDF.cell` or
