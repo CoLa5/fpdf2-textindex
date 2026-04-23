@@ -32,7 +32,7 @@ jobs:
         run: |
           uv run --no-sync --with pre-commit-uv pre-commit run --all-files \
           --color=always --hook-stage=manual --show-diff-on-failure |
-          uv run python scripts/pre_commit_md_report.py -color -report \
+          uv run python scripts/pre_commit_md_report.py --color --report \
           markdown-append:$GITHUB_STEP_SUMMARY
 
   test:
