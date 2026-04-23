@@ -1,3 +1,5 @@
+[![Pypi latest version](https://img.shields.io/pypi/v/fpdf2_textindex?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)](https://test.pypi.org/project/fpdf2_textindex#history)
+[![Python Support](https://img.shields.io/pypi/pyversions/fpdf2_textindex?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)](https://test.pypi.org/project/fpdf2_textindex/)
 [![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://cola5.github.io/fpdf2-textindex)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat)](https://www.gnu.org/licenses/gpl-3.0)
 
@@ -8,7 +10,7 @@
 
 # fpdf2 Text Index
 
-<img src="docs/icons/logo.png" title="fpdf2_textindex logo" width="25%"/>
+<img src="https://cola5.github.io/fpdf2-textindex/assets/logo.svg" title="fpdf2_textindex logo" width="25%"/>
 
 Adds a **text index** to [fpdf2](https://github.com/py-pdf/fpdf2), based on the
 documentation and source code of
@@ -164,5 +166,3 @@ So clicking on `"example"` on the text page will lead to corresponding entry in
 the text index. Clicking on the reference (locator) in the text index, page
 `"3"`, will return the reader to the text page. Cross-references are connected
 in the same way but inside of the text index.
-
----
