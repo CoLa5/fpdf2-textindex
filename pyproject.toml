@@ -177,6 +177,9 @@ line-ending = "auto"
 docstring-code-format = true
 docstring-code-line-length = "dynamic"
 
+[tool.typos.files]
+extend-exclude = ["requirements-dev.txt"]
+
 [tool.uv.build-backend]
 module-name = "fpdf2_textindex"
 module-root = ""
