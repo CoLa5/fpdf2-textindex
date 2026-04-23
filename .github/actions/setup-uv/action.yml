@@ -9,34 +9,63 @@ inputs:
     options:
       - "false"
       - "true"
+  python-version:
+    type: string
+    description: "Python version to use"
+    required: false
+
 runs:
   using: "composite"
   steps:
+    - name: Resolve python version
+      id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        if [ -n "${{ inputs.python-version }}" ]; then
+          PY_VERSION="${{ inputs.python-version }}"
+        elif [ -f .python-version ]; then
+          PY_VERSION="$(tr -d '[:space:]' < .python-version)"
+        else
+          echo "Python version not provided and .python-version not found"
+          exit 1
+        fi
+
+        if [ -z "$PY_VERSION" ]; then
+          echo "Resolved python version is empty"
+          exit 1
+        fi
+
+        echo "UV_PYTHON=$PY_VERSION" >> "$GITHUB_ENV"
+
     - name: Install system dependencies
+      shell: bash
       run: |
         sudo apt-get update --allow-releaseinfo-change
         if [ "${{ inputs.docs }}" = "false" ]; then
           sudo apt-get install qpdf
         fi
-      shell: bash
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
-        python-version-file: ".python-version"
+        python-version: ${{ env.UV_PYTHON }}
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v7.2.0
+      uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
       with:
-        version: "0.8.12"
         enable-cache: true
-        cache-dependency-glob: ".pre-commit-config.yaml"
+        cache-dependency-glob: |
+          .pre-commit-config.yml
+          pyproject.toml
+          uv.lock
 
     - name: Install dependencies
+      shell: bash
       run: |
         if [ "${{ inputs.docs }}" = "true" ]; then
           uv sync --locked --all-extras --group docs
         else
           uv sync --locked --all-extras --dev
         fi
-      shell: bash

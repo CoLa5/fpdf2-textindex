@@ -2,8 +2,7 @@ name: Publish to Test.Pypi
 
 on:
   push:
-    tags:
-      - v[0-9]+.[0-9]+.[0-9]+
+    tags: ["v*.*.*", "v*.*.*alpha*", "v*.*.*beta*"]
 
 permissions:
   contents: read
@@ -17,7 +16,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - uses: ./.github/actions/setup-uv
 
