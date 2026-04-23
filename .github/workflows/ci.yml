@@ -29,10 +29,10 @@ jobs:
 
       - name: Run pre-commit
         shell: bash
-        run:
-          uv run --no-sync --with pre-commit-uv pre-commit run --all-files
-          --color=always --hook-stage=manual --show-diff-on-failure | uv run
-          python scripts/pre_commit_md_report.py -r
+        run: |
+          uv run --no-sync --with pre-commit-uv pre-commit run --all-files \
+          --color=always --hook-stage=manual --show-diff-on-failure |
+          uv run python scripts/pre_commit_md_report.py -color -report \
           markdown-append:$GITHUB_STEP_SUMMARY
 
   test:
@@ -46,11 +46,27 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Install qpdf on Ubuntu
+        if: startsWith(matrix.platform, 'ubuntu') && inputs.docs == false
+        shell: bash
+        run: |
+          sudo apt-get update --allow-releaseinfo-change
+          sudo apt-get install qpdf
+          qpdf --version
+
+      - name: Install qpdf on Windows
+        if: startsWith(matrix.platform, 'windows')
+        shell: pwsh
+        run: |
+          choco install qpdf -y
+          qpdf --version
+
       - uses: ./.github/actions/setup-uv
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Run tests
+        shell: bash
         run: |
           # Ensuring there is no `generate=True` left in calls to
           # assert_pdf_equal
@@ -80,6 +96,7 @@ jobs:
           startsWith(matrix.platform, 'ubuntu') &&
           matrix.python-version == env.UV_PYTHON
         id: set_total
+        shell: bash
         run: |
           echo "total=$( uv run python -m coverage report --format=total )" >> $GITHUB_OUTPUT
 
@@ -112,6 +129,7 @@ jobs:
           docs: true
 
       - name: Create docs
+        shell: bash
         run: |
           mkdir -p public
           uv run python docs/make.py
@@ -135,6 +153,7 @@ jobs:
       - uses: ./.github/actions/setup-uv
 
       - name: Create example pdf
+        shell: bash
         run: |
           uv run python example/textindex_figures.py
           mkdir -p public/assets

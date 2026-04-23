@@ -2,13 +2,11 @@ name: "Setup uv environment"
 description: "Install system deps, Python, uv, and project dependencies"
 inputs:
   docs:
-    type: choice
+    type: boolean
     description: "Enable --group docs flag for uv sync"
     required: false
-    default: "false"
-    options:
-      - "false"
-      - "true"
+    default: false
+
   python-version:
     type: string
     description: "Python version to use"
@@ -21,31 +19,23 @@ runs:
       id: resolve
       shell: bash
       run: |
-        set -euo pipefail
+        PY_VERSION="$(tr -d '[:space:]' < .python-version)"
+        if [ -z "$PY_VERSION" ]; then
+          echo "Resolved .python-version is empty"
+          exit 1
+        fi
+        echo "PY_VERSION=$PY_VERSION" >> "$GITHUB_ENV"
 
         if [ -n "${{ inputs.python-version }}" ]; then
-          PY_VERSION="${{ inputs.python-version }}"
-        elif [ -f .python-version ]; then
-          PY_VERSION="$(tr -d '[:space:]' < .python-version)"
+          UV_PYTHON="${{ inputs.python-version }}"
         else
-          echo "Python version not provided and .python-version not found"
+          UV_PYTHON="$PY_VERSION"
+        fi
+        if [ -z "$UV_PYTHON" ]; then
+          echo "Resolved uv python version is empty"
           exit 1
         fi
-
-        if [ -z "$PY_VERSION" ]; then
-          echo "Resolved python version is empty"
-          exit 1
-        fi
-
-        echo "UV_PYTHON=$PY_VERSION" >> "$GITHUB_ENV"
-
-    - name: Install system dependencies
-      shell: bash
-      run: |
-        sudo apt-get update --allow-releaseinfo-change
-        if [ "${{ inputs.docs }}" = "false" ]; then
-          sudo apt-get install qpdf
-        fi
+        echo "UV_PYTHON=$UV_PYTHON" >> "$GITHUB_ENV"
 
     - name: Set up Python
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
