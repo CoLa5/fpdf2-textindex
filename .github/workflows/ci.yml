@@ -30,8 +30,10 @@ jobs:
       - name: Run pre-commit
         shell: bash
         run:
-          uv run --no-sync --with pre-commit-uv pre-commit run --all-files \
-          --color=always --hook-stage=manual --show-diff-on-failure
+          uv run --no-sync --with pre-commit-uv pre-commit run --all-files
+          --color=always --hook-stage=manual --show-diff-on-failure | uv run
+          python scripts/pre_commit_md_report.py -r
+          markdown-append:$GITHUB_STEP_SUMMARY
 
   test:
     name: Test
