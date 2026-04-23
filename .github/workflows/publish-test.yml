@@ -32,10 +32,5 @@ jobs:
           uv run --isolated --no-project --with dist/fpdf2_textindex-${VERSION}-py3-none-any.whl test/smoke_test.py
           uv run --isolated --no-project --with dist/fpdf2_textindex-${VERSION}.tar.gz test/smoke_test.py
 
-      - name: Check existing versions
-        run: |
-          echo "publish=yes" >> "$GITHUB_OUTPUT"
-
       - name: Publish
-        if: steps.build.outputs.publish == 'yes'
         run: uv publish --index testpypi
