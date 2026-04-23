@@ -6,6 +6,7 @@ import argparse
 from collections.abc import Iterator
 import re
 import sys
+from typing import Final
 
 
 def iter_input() -> Iterator[str]:
@@ -16,6 +17,11 @@ class ReportBuilder:
     """Report Builder."""
 
     ANSI_RE: re.Pattern = re.compile(r"\x1b\[[0-9;]*m")  # ANSI color codes
+    COLORS: Final[dict[str, str]] = {
+        "Passed": "green",
+        "Failed": "red",
+        "Skipped": "blue",
+    }
     HEADER: tuple[str, ...] = (
         "# pre-commit Report",
         "",
@@ -78,7 +84,7 @@ class ReportBuilder:
             self.current = None
             self.stopped = True
 
-    def to_markdown_table(self) -> str:
+    def to_markdown_table(self, *, color: bool = False) -> str:
         if not self.stopped:
             self.finalize()
 
@@ -88,12 +94,15 @@ class ReportBuilder:
         content = []
         for r in self.rows:
             comments = "<br>".join(r["comments"]) if r["comments"] else "-"
-            content.append(
-                f"| {r['hook']:s} | {r['status']:s} | {comments:s} |"
-            )
+            if color:
+                c = self.COLORS[r["status"]]
+                status = f"$${{\\textcolor{{{c:s}}}{r['status']:s}}}$$"
+            else:
+                status = r["status"]
+            content.append(f"| {r['hook']:s} | {status:s} | {comments:s} |")
         return "\n".join([*self.HEADER, *content])
 
-    def write(self, report: str) -> None:
+    def write(self, report: str, *, color: bool = False) -> None:
         try:
             fmt, target = report.split(":", 1)
         except ValueError as e:
@@ -109,14 +118,21 @@ class ReportBuilder:
 
         if fmt == "markdown-append":
             with open(target, "a", encoding="utf-8") as f:
-                f.write("\n" + self.to_markdown_table() + "\n")
+                f.write("\n" + self.to_markdown_table(color=color) + "\n")
         else:
             with open(target, "w", encoding="utf-8") as f:
-                f.write(self.to_markdown_table() + "\n")
+                f.write(self.to_markdown_table(color=color) + "\n")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-c",
+        "--color",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether to show colors for status",
+    )
     parser.add_argument(
         "-r",
         "--report",
@@ -131,7 +147,7 @@ def main() -> None:
         sys.stdout.write(builder.feed(line))
         sys.stdout.flush()
 
-    builder.write(args.report)
+    builder.write(args.report, color=args.color)
 
 
 if __name__ == "__main__":
