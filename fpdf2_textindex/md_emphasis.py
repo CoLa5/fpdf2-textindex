@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import enum
 import re
-from typing import Self, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import fpdf
+from typing_extensions import Self
 
 
 class MDEmphasis(enum.IntFlag):
@@ -16,9 +17,7 @@ class MDEmphasis(enum.IntFlag):
         MARKER_PATTERN: str
         MARKERS: dict[MDEmphasis, str]
         MD_PATTERN: re.Pattern[str]
-
-    NONE = 0
-    """No emphasis."""
+        NONE: MDEmphasis
 
     BOLD = 1
     """Bold."""
@@ -108,10 +107,16 @@ class MDEmphasis(enum.IntFlag):
         return cls.parse(text)[0]
 
 
+MDEmphasis.NONE = MDEmphasis(0)
+"""None."""
+
 # Add markers and patterns for formatting and parsing
 MDEmphasis.MARKERS = {MDEmphasis.NONE: ""}
 MDEmphasis.MARKERS.update(
-    {s: getattr(fpdf.FPDF, f"MARKDOWN_{s.name:s}_MARKER") for s in MDEmphasis}
+    {
+        mde: getattr(fpdf.FPDF, f"MARKDOWN_{mde.name:s}_MARKER")
+        for mde in MDEmphasis
+    }
 )
 MDEmphasis.MARKER_PATTERN = (
     r"(?<!\\)(?P<{name:s}>"

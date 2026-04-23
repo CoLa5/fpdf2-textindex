@@ -206,7 +206,7 @@ def main() -> None:
 
     # Print
     doc.creation_date = dt.datetime(1969, 12, 31, 19, 00, 00).replace(
-        tzinfo=dt.UTC
+        tzinfo=dt.timezone.utc
     )
     doc.output("textindex_figures.pdf")
 

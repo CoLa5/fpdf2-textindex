@@ -280,6 +280,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fpdf2" },
+    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -295,7 +296,10 @@ docs = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "fpdf2", specifier = ">=2.8.7" }]
+requires-dist = [
+    { name = "fpdf2", specifier = ">=2.8.7" },
+    { name = "typing-extensions", specifier = ">=4.15.0" },
+]
 
 [package.metadata.requires-dev]
 dev = [

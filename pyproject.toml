@@ -38,6 +38,7 @@ classifiers = [
 
 dependencies = [
     "fpdf2>=2.8.7",
+    "typing-extensions>=4.15.0",
 ]
 
 [dependency-groups]

@@ -15,7 +15,7 @@ HERE: pathlib.Path = pathlib.Path(__file__).resolve().parent
 DATA: pathlib.Path = HERE / "data"
 
 EPOCH: dt.datetime = dt.datetime(1969, 12, 31, 19, 00, 00).replace(
-    tzinfo=dt.UTC
+    tzinfo=dt.timezone.utc
 )
 
 QPDF_AVAILABLE: bool = bool(shutil.which("qpdf"))

@@ -4,7 +4,9 @@ from collections.abc import Iterable, Sequence
 import os
 import pathlib
 import re
-from typing import Final, Self, TextIO, overload
+from typing import Final, TextIO, overload
+
+from typing_extensions import Self
 
 from fpdf2_textindex.constants import LOGGER
 from fpdf2_textindex.md_emphasis import MDEmphasis

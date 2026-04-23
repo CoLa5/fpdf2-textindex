@@ -6,7 +6,9 @@ import abc
 from collections.abc import Iterable, Iterator
 import dataclasses
 import enum
-from typing import Any, ClassVar, Self
+from typing import Any, ClassVar
+
+from typing_extensions import Self
 
 from fpdf2_textindex import constants as const
 from fpdf2_textindex.constants import LOGGER
@@ -96,17 +98,20 @@ class CrossReference(_LabelPathABC):
         return f"{const.INDEX_ID_PREFIX:s}{self.id:d}"
 
 
-class CrossReferenceType(enum.StrEnum):
+class CrossReferenceType(str, enum.Enum):
     """Cross Reference Type."""
 
-    NONE = enum.auto()
+    NONE = "none"
     """No cross reference."""
 
-    SEE = enum.auto()
+    SEE = "see"
     """SEE-cross reference."""
 
     ALSO = "see also"
     """SEE ALSO-cross reference."""
+
+    def __str__(self) -> str:
+        return self.value
 
     @classmethod
     def _missing_(cls, value: Any) -> Self | None:  # noqa: ANN401
