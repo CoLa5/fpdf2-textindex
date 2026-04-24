@@ -1,6 +1,6 @@
-[![Pypi Latest Version](https://img.shields.io/pypi/v/fpdf2_textindex?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)](https://test.pypi.org/project/fpdf2_textindex#history)
-[![Python Support](https://img.shields.io/pypi/pyversions/fpdf2_textindex?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)](https://test.pypi.org/project/fpdf2_textindex/)
-[![Python Types](https://img.shields.io/pypi/types/fpdf2_textindex?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org)](https://test.pypi.org/project/fpdf2_textindex/)
+[![Pypi Latest Version](https://img.shields.io/pypi/v/fpdf2_textindex)](https://pypi.org/project/fpdf2_textindex#history)
+[![Python Support](https://img.shields.io/pypi/pyversions/fpdf2_textindex)](https://pypi.org/project/fpdf2_textindex/)
+[![Python Types](https://img.shields.io/pypi/types/fpdf2_textindex)](https://pypi.org/project/fpdf2_textindex/)
 [![Documentation](https://img.shields.io/badge/docs-github.io-blue)](https://cola5.github.io/fpdf2-textindex)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat)](https://www.gnu.org/licenses/gpl-3.0)
 
@@ -11,7 +11,7 @@
 
 # fpdf2 Text Index
 
-<img src="https://cola5.github.io/fpdf2-textindex/assets/logo.svg" title="fpdf2_textindex logo" width="25%"/>
+<img src="https://cola5.github.io/fpdf2-textindex/assets/logo.svg" title="fpdf2_textindex logo" width="50%"/>
 
 Adds a **text index** to [fpdf2](https://github.com/py-pdf/fpdf2), based on the
 documentation and source code of
