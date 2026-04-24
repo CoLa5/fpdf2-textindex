@@ -69,12 +69,12 @@ class ReportBuilder:
                 "status": status.strip(),
                 "comments": [],
             }
-        elif self.current and not line.startswith("- hook id"):
+        elif self.current and line.startswith("- "):
             self.current["comments"].append(line)
         return raw
 
     def finalize(self) -> None:
-        if isinstance(self.current, str):
+        if isinstance(self.current, dict):
             self.rows.append(self.current)
             self.current = None
 
