@@ -36,7 +36,7 @@ jobs:
           --color=always --hook-stage=manual --show-diff-on-failure |
           uv run python scripts/pre_commit_md_report.py \
           --report "markdown:${PRE_COMMIT_OUTPUT}"
-          echo "PRE_COMMIT_FILE=${$PRE_COMMIT_OUTPUT}" >> "$GITHUB_ENV"
+          echo "PRE_COMMIT_FILE=${PRE_COMMIT_OUTPUT}" >> "$GITHUB_ENV"
 
       - name: Output pre-commit report to the job summary
         if: always()
@@ -100,8 +100,8 @@ jobs:
           $COV_HTML \
           --md-report --md-report-exclude-outcomes skipped \
           --md-report-output "$TEST_OUTPUT"
-          echo "COVERAGE_FILE=${$COVERAGE_OUTPUT}" >> "$GITHUB_ENV"
-          echo "TEST_FILE=${$TEST_OUTPUT}" >> "$GITHUB_ENV"
+          echo "COVERAGE_FILE=${COVERAGE_OUTPUT}" >> "$GITHUB_ENV"
+          echo "TEST_FILE=${TEST_OUTPUT}" >> "$GITHUB_ENV"
 
       - name: Output coverage / test reports to the job summary
         if: always()
