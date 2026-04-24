@@ -126,7 +126,7 @@ jobs:
         if: |
           github.ref == 'refs/heads/main' &&
           startsWith(matrix.platform, 'ubuntu') &&
-          matrix.python-version == env.UV_PYTHON
+          matrix.python-version == env.PY_VERSION
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: artifact-coverage
@@ -136,7 +136,7 @@ jobs:
         if: |
           github.ref == 'refs/heads/main' &&
           startsWith(matrix.platform, 'ubuntu') &&
-          matrix.python-version == env.UV_PYTHON
+          matrix.python-version == env.PY_VERSION
         id: set_total
         shell: bash
         run: |
@@ -146,7 +146,7 @@ jobs:
         if: |
           github.ref == 'refs/heads/main' &&
           startsWith(matrix.platform, 'ubuntu') &&
-          matrix.python-version == env.UV_PYTHON
+          matrix.python-version == env.PY_VERSION
         uses: schneegans/dynamic-badges-action@0e50b8bad39e7e1afd3e4e9c2b7dd145fad07501 # v1.8.0
         with:
           auth: ${{ secrets.GIST_SECRET }}
