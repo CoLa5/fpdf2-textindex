@@ -66,6 +66,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run tests
+        env:
+          REPORT_OUTPUT: md_report.md
         shell: bash
         run: |
           # Ensuring there is no `generate=True` left in calls to
@@ -77,8 +79,23 @@ jobs:
             COV_HTML="--cov-report html"
           fi
           # Executing all test
-          uv run pytest --cov-report markdown-append:$GITHUB_STEP_SUMMARY \
-          $COV_HTML -vv
+          uv run pytest -v \
+          --cov-report markdown-append:$GITHUB_STEP_SUMMARY \
+          $COV_HTML \
+          --md-report --md-report-exclude-outcomes skipped \
+          --md-report-output "$REPORT_OUTPUT"
+          echo "REPORT_FILE=${REPORT_OUTPUT}" >> "$GITHUB_ENV"
+
+      - name: Output reports to the job summary
+        shell: bash
+        run: |
+          if [ -f "$REPORT_FILE" ]; then
+            echo "<details><summary>Failed Test Report</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat "$REPORT_FILE" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload coverage report artifact
         if: |
