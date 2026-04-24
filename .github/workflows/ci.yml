@@ -35,7 +35,7 @@ jobs:
           uv run --no-sync --with pre-commit-uv pre-commit run --all-files \
           --color=always --hook-stage=manual --show-diff-on-failure |
           uv run python scripts/pre_commit_md_report.py \
-          --report "markdown:$PRE_COMMIT_OUTPUT"
+          --report "markdown:${PRE_COMMIT_OUTPUT}"
           echo "PRE_COMMIT_FILE=${$PRE_COMMIT_OUTPUT}" >> "$GITHUB_ENV"
 
       - name: Output pre-commit report to the job summary
