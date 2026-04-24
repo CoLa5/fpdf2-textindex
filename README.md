@@ -37,7 +37,7 @@ pdf.output("example.pdf")
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
 directives in a text:
 
-> Most mechanical keyboard firmware{^} supports the use of [key >
+> Most mechanical keyboard firmware{^} supports the use of [key
 > combinations]{^}.
 
 Print it in the PDF by enabling markdown in `fpdf2.FPDF.cell` or
@@ -114,7 +114,7 @@ An example can be created by
 and produces
 [textindex_figures.pdf](https://cola5.github.io/fpdf2-textindex/assets/textindex_figures.pdf)
 with all the examples from
-[Math Gemmell's website](https://mattgemmell.scot/textindex/).s
+[Math Gemmell's website](https://mattgemmell.scot/textindex/).
 
 ---
 
