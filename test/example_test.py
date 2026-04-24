@@ -8,6 +8,13 @@ import pytest
 from test.conftest import DATA
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win") and sys.version.startswith("3.14"),
+    reason=(
+        "Skip on Windows & Py3.14 "
+        "(PDF trailer id differs because of zlib while rest of PDF is equal)"
+    ),
+)
 @pytest.mark.parametrize(
     "example",
     [pathlib.Path(__file__).parents[1] / "example" / "textindex_figures.py"],
