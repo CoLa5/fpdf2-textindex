@@ -4,7 +4,9 @@ import hashlib
 import pathlib
 import shutil
 import subprocess
+from typing import Final
 import warnings
+import zlib
 
 import fpdf
 
@@ -18,13 +20,19 @@ EPOCH: dt.datetime = dt.datetime(1969, 12, 31, 19, 00, 00).replace(
     tzinfo=dt.timezone.utc
 )
 
-QPDF_AVAILABLE: bool = bool(shutil.which("qpdf"))
+QPDF_AVAILABLE: Final[bool] = bool(shutil.which("qpdf"))
 if not QPDF_AVAILABLE:
     warnings.warn(
         "qpdf command not available on the $PATH, falling back to hash-based "
         "comparisons in tests",
         stacklevel=1,
     )
+
+USING_ZLIB_NG: Final[bool] = (
+    hasattr(zlib, "ZLIBNG_VERSION")
+    or "zlib-ng" in getattr(zlib, "ZLIB_RUNTIME_VERSION", "").lower()
+    or "zlib-ng" in getattr(zlib, "ZLIB_VERSION", "").lower()
+)
 
 
 def _qpdf(input_pdf_filepath: pathlib.Path) -> bytes:
@@ -46,7 +54,7 @@ def _run_cmd(*args: str) -> bytes:
         raise
 
 
-# NOTE: Adapted from fpdf2-testing
+# NOTE: Adapted from [fpdf2-testing](https://github.com/py-pdf/fpdf2/blob/master/test/conftest.py)
 def assert_pdf_equal(
     pdf: fpdf.FPDF,
     expected: fpdf.FPDF | bytearray | pathlib.Path,
@@ -86,6 +94,12 @@ def assert_pdf_equal(
         )
         pdf.output(expected.open("wb"), linearize=linearize)
         return
+
+    # Force ignore_id_changes when Python is linked against zlib-ng,
+    # as the compressed data is not 100% identical to standard zlib.
+    # https://github.com/python/cpython/pull/131438
+    if USING_ZLIB_NG and QPDF_AVAILABLE:
+        ignore_id_changes = True
 
     if isinstance(expected, pathlib.Path):
         expected_pdf_path = expected
