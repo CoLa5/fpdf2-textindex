@@ -29,19 +29,5 @@ jobs:
           uv run --isolated --no-project --with dist/fpdf2_textindex-${VERSION}-py3-none-any.whl test/smoke_test.py
           uv run --isolated --no-project --with dist/fpdf2_textindex-${VERSION}.tar.gz test/smoke_test.py
 
-      - name: Check existing versions
-        id: check
-        run: |
-          echo Versions already released on TestPypi: $(curl -Ls 'https://test.pypi.org/pypi/fpdf2_textindex/json' | jq -r '.releases|keys[]')
-          VERSION=$(uv run python -c "import importlib.metadata; print(importlib.metadata.version('fpdf2_textindex'))")
-          echo Current code version: $VERSION
-          # Checking if current code version has already been released:
-          if ! curl -Ls "https://test.pypi.org/pypi/fpdf2_textindex/json" \
-            | jq -r '.releases|keys[]' \
-            | grep "^$VERSION$"; then
-            echo "publish=yes" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Publish
-        if: steps.check.outputs.publish == 'yes'
         run: uv publish --index testpypi
