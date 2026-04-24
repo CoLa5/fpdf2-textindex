@@ -105,6 +105,9 @@ strict = true
 addopts = "--cov-report=xml --cov=fpdf2_textindex"
 log_cli = true
 log_cli_level = "WARN"
+md_report_color = "never"
+md_report_exclude_outcomes = ["skipped"]
+md_report_flavor = "github"
 
 [tool.ruff]
 line-length = 80
@@ -190,6 +193,5 @@ source_include = ["LICENSE", "README.md"]
 [[tool.uv.index]]
 name = "testpypi"
 url = "https://test.pypi.org/simple/"
-check-url = "https://test.pypi.org/simple/"
 publish-url = "https://test.pypi.org/legacy/"
 explicit = true

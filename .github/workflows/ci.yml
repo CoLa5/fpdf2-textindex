@@ -98,9 +98,9 @@ jobs:
           uv run pytest -v \
           --cov-report "markdown:${COVERAGE_OUTPUT}" \
           $COV_HTML \
-          --md-report --md-report-exclude-outcomes skipped \
-          --md-report-output "$TEST_OUTPUT"
-          echo "COVERAGE_FILE=${COVERAGE_OUTPUT}" >> "$GITHUB_ENV"
+          --md-report --md-report-output "$TEST_OUTPUT"
+          # Save report file locations in env var
+          echo "COVR_FILE=${COVERAGE_OUTPUT}" >> "$GITHUB_ENV"
           echo "TEST_FILE=${TEST_OUTPUT}" >> "$GITHUB_ENV"
 
       - name: Output coverage / test reports to the job summary
@@ -114,10 +114,10 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "</details>" >> $GITHUB_STEP_SUMMARY
           fi
-          if [ -f "$COVERAGE_FILE" ]; then
+          if [ -f "$COVR_FILE" ]; then
             echo "<details><summary>Coverage Report</summary>" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            cat "$COVERAGE_FILE" >> $GITHUB_STEP_SUMMARY
+            cat "$COVR_FILE" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "</details>" >> $GITHUB_STEP_SUMMARY
           fi

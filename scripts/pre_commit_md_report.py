@@ -6,6 +6,7 @@ import argparse
 from collections.abc import Iterator
 import re
 import sys
+from typing import Final
 
 
 def iter_input() -> Iterator[str]:
@@ -16,12 +17,7 @@ class ReportBuilder:
     """Report Builder."""
 
     ANSI_RE: re.Pattern = re.compile(r"\x1b\[[0-9;]*m")  # ANSI color codes
-    HEADER: tuple[str, ...] = (
-        "# pre-commit Report",
-        "",
-        "| Hook | Status | Comments |",
-        "|------|--------|----------|",
-    )
+    MD_SPECIALS: Final[str] = r"\`*_{}[]()#+-.!|>"
 
     def __init__(self) -> None:
         self.rows: list[dict[str, str]] = []
@@ -41,6 +37,18 @@ class ReportBuilder:
     @staticmethod
     def is_stop_line(line: str) -> bool:
         return "pre-commit hook(s) made changes" in line
+
+    @classmethod
+    def md_escape(cls, text: str) -> str:
+        out = []
+        for ch in text:
+            if ch == "\\":
+                out.append("\\\\")
+            elif ch in cls.MD_SPECIALS:
+                out.append("\\" + ch)
+            else:
+                out.append(ch)
+        return "".join(out)
 
     def feed(self, raw: str) -> str:
         if self.stopped:
@@ -85,16 +93,64 @@ class ReportBuilder:
         if not self.rows:
             return ""
 
-        content = []
+        # Escape row values and calculate column width
+        c_len = {"hook": 4, "status": 6, "comments": 8}
+        rows = []
         for r in self.rows:
-            comments = "<br>".join(r["comments"]) if r["comments"] else "-"
-            content.append(
-                f"| {r['hook']:s} | {r['status']:s} | {comments:s} |"
-            )
+            hook = self.md_escape(r["hook"])
+            c_len["hook"] = max(c_len["hook"], len(hook))
 
+            status = self.md_escape(r["status"])
+            c_len["status"] = max(c_len["status"], len(status))
+
+            comments = (
+                "<br>".join("- " + self.md_escape(c[2:]) for c in r["comments"])
+                if r["comments"]
+                else "-"
+            )
+            c_len["comments"] = max(c_len["comments"], len(comments))
+            rows.append({"hook": hook, "status": status, "comments": comments})
+
+        # Create content
+        content = []
+        content.append(
+            "|".join(
+                [
+                    "",
+                    f" {'Hook':<{c_len['hook']:d}s} ",
+                    f" {'Status':>{c_len['status']:d}s} ",
+                    f" {'Comments':<{c_len['comments']:d}s} ",
+                    "",
+                ]
+            )
+        )
+        content.append(
+            "|".join(
+                [
+                    "",
+                    f" {'':-<{c_len['hook']:d}s} ",
+                    f" {'':->{c_len['status'] - 1:d}s}: ",
+                    f" {'':-<{c_len['comments']:d}s} ",
+                    "",
+                ]
+            )
+        )
+        for r in rows:
+            content.append(
+                "|".join(
+                    [
+                        "",
+                        f" {r['hook']:<{c_len['hook']:d}s} ",
+                        f" {r['status']:>{c_len['status']:d}s} ",
+                        f" {r['comments']:<{c_len['comments']:d}s} ",
+                        "",
+                    ]
+                )
+            )
+        content.append("")
         if self.stopped:
-            content.extend(["", "**pre-commit hook(s) require changes**"])
-        return "\n".join([*self.HEADER, *content])
+            content.extend(["**pre-commit hook(s) require(s) changes**", ""])
+        return "\n".join(content)
 
     def write(self, report: str) -> None:
         try:
