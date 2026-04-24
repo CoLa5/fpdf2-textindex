@@ -28,12 +28,27 @@ jobs:
             hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit
+        env:
+          PRE_COMMIT_OUTPUT: pre_commit_report.md
         shell: bash
         run: |
           uv run --no-sync --with pre-commit-uv pre-commit run --all-files \
           --color=always --hook-stage=manual --show-diff-on-failure |
           uv run python scripts/pre_commit_md_report.py \
-          --report markdown-append:$GITHUB_STEP_SUMMARY
+          --report "markdown:$PRE_COMMIT_OUTPUT"
+          echo "PRE_COMMIT_FILE=${$PRE_COMMIT_OUTPUT}" >> "$GITHUB_ENV"
+
+      - name: Output pre-commit report to the job summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$PRE_COMMIT_FILE" ]; then
+            echo "<details><summary>Pre-Commit Report</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat "$PRE_COMMIT_FILE" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi
 
   test:
     name: Test
@@ -67,7 +82,8 @@ jobs:
 
       - name: Run tests
         env:
-          REPORT_OUTPUT: md_report.md
+          COVERAGE_OUTPUT: cov_report.md
+          TEST_OUTPUT: test_report.md
         shell: bash
         run: |
           # Ensuring there is no `generate=True` left in calls to
@@ -80,20 +96,28 @@ jobs:
           fi
           # Executing all test
           uv run pytest -v \
-          --cov-report markdown-append:$GITHUB_STEP_SUMMARY \
+          --cov-report "markdown:${COVERAGE_OUTPUT}" \
           $COV_HTML \
           --md-report --md-report-exclude-outcomes skipped \
-          --md-report-output "$REPORT_OUTPUT"
-          echo "REPORT_FILE=${REPORT_OUTPUT}" >> "$GITHUB_ENV"
+          --md-report-output "$TEST_OUTPUT"
+          echo "COVERAGE_FILE=${$COVERAGE_OUTPUT}" >> "$GITHUB_ENV"
+          echo "TEST_FILE=${$TEST_OUTPUT}" >> "$GITHUB_ENV"
 
-      - name: Output test reports to the job summary
+      - name: Output coverage / test reports to the job summary
         if: always()
         shell: bash
         run: |
-          if [ -f "$REPORT_FILE" ]; then
-            echo "<details><summary>Failed Test Report</summary>" >> $GITHUB_STEP_SUMMARY
+          if [ -f "$TEST_FILE" ]; then
+            echo "<details><summary>Test Report</summary>" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            cat "$REPORT_FILE" >> $GITHUB_STEP_SUMMARY
+            cat "$TEST_FILE" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f "$COVERAGE_FILE" ]; then
+            echo "<details><summary>Coverage Report</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat "$COVERAGE_FILE" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "</details>" >> $GITHUB_STEP_SUMMARY
           fi
