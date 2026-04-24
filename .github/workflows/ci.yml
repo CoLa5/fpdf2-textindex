@@ -86,7 +86,8 @@ jobs:
           --md-report-output "$REPORT_OUTPUT"
           echo "REPORT_FILE=${REPORT_OUTPUT}" >> "$GITHUB_ENV"
 
-      - name: Output reports to the job summary
+      - name: Output test reports to the job summary
+        if: always()
         shell: bash
         run: |
           if [ -f "$REPORT_FILE" ]; then
