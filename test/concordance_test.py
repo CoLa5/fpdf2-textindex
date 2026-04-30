@@ -112,8 +112,12 @@ def test_parser_concordance(
         )
         assert parsed_entry.sort_key == entry.sort_key, (entry, msg)
 
-    warnings = [r for r in caplog.records if r.levelno >= logging.WARNING]
-    if warnings or warn_msg:
-        assert warn_msg is not None and any(
-            warn_msg in r.message for r in warnings
-        ), (msg, warn_msg)
+    cap_warn_msgs = [
+        r.message for r in caplog.records if r.levelno == logging.WARNING
+    ]
+    if cap_warn_msgs or warn_msg:
+        assert warn_msg is not None and warn_msg in cap_warn_msgs, (
+            msg,
+            warn_msg,
+            cap_warn_msgs,
+        )

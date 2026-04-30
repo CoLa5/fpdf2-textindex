@@ -9,6 +9,7 @@ import warnings
 import zlib
 
 import fpdf
+import pytest
 
 from fpdf2_textindex.interface import CrossReferenceType
 from fpdf2_textindex.interface import TextIndexEntry
@@ -791,3 +792,9 @@ def create_figure_test_cases() -> Iterator[
         entries,
         None,
     )
+
+
+@pytest.fixture(autouse=True, scope="function")
+def reset_entry_next_id() -> Iterator[None]:
+    TextIndexEntry._next_id = 0
+    yield

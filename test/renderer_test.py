@@ -7,18 +7,11 @@ from typing import Any
 import fpdf
 import pytest
 
-from fpdf2_textindex.interface import TextIndexEntry
 from fpdf2_textindex.pdf import FPDF
 from fpdf2_textindex.renderer import TextIndexRenderer
 from test.conftest import DATA
 from test.conftest import assert_pdf_equal
 from test.conftest import create_figure_test_cases
-
-
-@pytest.fixture(autouse=True)
-def reset_entry_next_id() -> Iterator[None]:
-    TextIndexEntry._next_id = 0
-    yield
 
 
 def create_ref_test_cases() -> Iterator[tuple[str, str, list[str]]]:

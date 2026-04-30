@@ -1,14 +1,10 @@
 import logging
-import pathlib
 
 import pytest
 
 from fpdf2_textindex.interface import TextIndexEntry
 from fpdf2_textindex.parser import TextIndexParser
 from test.conftest import create_figure_test_cases
-
-HERE = pathlib.Path(__file__).resolve().parent
-CONCORDANCE_FILE: pathlib.Path = HERE / "concordance.tsv"
 
 
 @pytest.mark.parametrize(
@@ -32,10 +28,7 @@ def test_parser(
     for entry in entries:
         parsed_entry, existing = parser.entry_at_label_path(entry.label_path)
         assert existing, (entry, parser.entries, msg)
-        assert isinstance(parsed_entry, TextIndexEntry), (
-            entry,
-            msg,
-        )
+        assert isinstance(parsed_entry, TextIndexEntry), (entry, msg)
         assert parsed_entry.label == entry.label, (entry, msg)
         assert parsed_entry.label_path == entry.label_path, (entry, msg)
         assert parsed_entry.references == entry.references, (entry, msg)
@@ -45,8 +38,12 @@ def test_parser(
         )
         assert parsed_entry.sort_key == entry.sort_key, (entry, msg)
 
-    warnings = [r for r in caplog.records if r.levelno >= logging.WARNING]
-    if warnings or warn_msg:
-        assert warn_msg is not None and any(
-            warn_msg in r.message for r in warnings
-        ), (msg, warn_msg)
+    cap_warn_msgs = [
+        r.message for r in caplog.records if r.levelno == logging.WARNING
+    ]
+    if cap_warn_msgs or warn_msg:
+        assert warn_msg is not None and warn_msg in cap_warn_msgs, (
+            msg,
+            warn_msg,
+            cap_warn_msgs,
+        )
