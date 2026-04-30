@@ -41,7 +41,7 @@ pdf.output("example.pdf")
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
 directives in a text:
 
-> Most mechanical keyboard firmware{^} supports the use of [key > > > > >
+> Most mechanical keyboard firmware{^} supports the use of [key
 > combinations]{^}.
 
 Print it in the PDF by enabling markdown in `fpdf2.FPDF.cell` or
@@ -63,6 +63,7 @@ For a complete documentation of the supported text index directives, see the
 
 The only difference to this documentation is the adaption of the emphasis to the
 [markdown style of fpdf2](https://py-pdf.github.io/fpdf2/TextStyling.html#markdowntrue).
+
 So the text:
 
 > This entry will be **\*\*emphasised\*\***{^} in the index.  
@@ -111,14 +112,46 @@ numbering, use **Page Labels** to assign a specific numbering style to the index
 pages. When using Page Labels, any extra text index pages will follow the
 numbering style of the first text index page
 
+## Text Index Directive Syntax
+
+```text
+_example_{^foo>"\* text"#demo |bar;+baz>fiz [whiz] ~z !}
+           1            2     3             4      5  6
+```
+
+The index directive in the example will:
+
+1. Create a reference from the `"example text"` subentry within the `"foo"`
+   top-level entry that leads to the directive's location in the text on the
+   corresponding PDF page. If the entry or subentry do not exist, they will be
+   created.
+2. Define the alias `"#demo-alias"` for the path to the subentry (`"foo"` >
+   `"bar baz"`).
+3. Adds cross-references to the entry:
+  - A SEE-cross reference to the `"bar"` top-level entry,
+  - An SEE ALSO-cross reference to the `"fiz"` subentry within the `"baz"`
+    top-level entry.
+
+4. Apply the `"whiz"` suffix to the directive's reference locator.
+5. Sort the entry as if its heading starts with `"z"`.
+6. Apply an emphasis (bold) to the mark's reference locator.
+
+The resulting index with example page numbers would look like:
+
+- bar, 3
+- baz
+  - fiz, 5
+- foo
+  - example text, **6** (_see_ bar). _See also_ baz: fiz
+
+In a real index, this would provoke an error, because either you set a reference
+locator to a PDF page and a SEE ALSO-cross reference or a SEE- and a SEE
+ALSO-cross reference, but not all three at the same time.
+
 ## Example
 
-An example can be created by
-[`example/textindex_figures.py`](https://github.com/CoLa5/fpdf2-textindex/blob/main/example/textindex_figures.py#L130)
-and produces
-[textindex_figures.pdf](https://cola5.github.io/fpdf2-textindex/assets/textindex_figures.pdf)
-with all the examples from
-[Math Gemmell's website](https://mattgemmell.scot/textindex/).
+An example can be created by [`example/textindex_figures.py`](https://github.com/CoLa5/fpdf2-textindex/blob/main/example/textindex_figures.py#L130)
+and produces [textindex_figures.pdf](https://cola5.github.io/fpdf2-textindex/assets/textindex_figures.pdf) with all the examples from [Math Gemmell's website](https://mattgemmell.scot/textindex/).
 
 ---
 
