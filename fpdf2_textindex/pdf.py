@@ -8,6 +8,8 @@ from typing import BinaryIO, Literal, NamedTuple, TYPE_CHECKING, overload
 import warnings
 
 import fpdf
+from fpdf.deprecation import get_stack_level
+from fpdf.deprecation import support_deprecated_txt_arg
 from fpdf.enums import Align
 from fpdf.enums import DocumentCompliance
 from fpdf.enums import MethodReturnValue
@@ -17,7 +19,11 @@ from fpdf.enums import PageOrientation
 from fpdf.enums import WrapMode
 from fpdf.enums import XPos
 from fpdf.enums import YPos
+from fpdf.errors import FPDFException
+from fpdf.errors import PDFAComplianceError
 from fpdf.fonts import TTFFont
+from fpdf.fpdf import ToCPlaceholder
+from fpdf.fpdf import check_page
 from fpdf.line_break import Fragment
 from fpdf.line_break import MultiLineBreak
 from fpdf.line_break import TextLine
@@ -166,7 +172,7 @@ class FPDF(fpdf.FPDF):
         prev_toc_allow_page_insertion = self._toc_allow_page_insertion
 
         self.page, self.y = indexp.start_page, indexp.y
-        self.toc_placeholder = fpdf.fpdf.ToCPlaceholder(
+        self.toc_placeholder = ToCPlaceholder(
             lambda pdf, outlines: None,
             indexp.start_page,
             indexp.y,
@@ -194,7 +200,7 @@ class FPDF(fpdf.FPDF):
                 f"breaks: ToC ended on page {self.page:d} while it was "
                 f"expected to span exactly {indexp.pages:d} pages"
             )
-            raise fpdf.errors.FPDFException(error_msg)
+            raise FPDFException(error_msg)
         if self._toc_inserted_pages:
             # Generating final page footer after more pages were inserted:
             self._render_footer()
@@ -304,7 +310,7 @@ class FPDF(fpdf.FPDF):
     @property
     def index_entries(self) -> list[TextIndexEntry]:
         """The (so far parsed) index entries."""
-        return self._index_parser.entries
+        return self._index_parser.entries.copy()
 
     def add_index_entry(
         self,
@@ -328,7 +334,22 @@ class FPDF(fpdf.FPDF):
         entry.sort_key = sort_key
         return entry
 
-    @fpdf.fpdf.check_page
+    def index_entry_at_label_path(
+        self,
+        label_path: Iterable[str],
+    ) -> TextIndexEntry | None:
+        """Returns a text index entry by its label path.
+
+        Args:
+            label_path: The label path.
+
+        Returns:
+            The found :py:class:`fpdf2_textindex.TextIndexEntry` or `None` if it
+            does not exist.
+        """
+        return self._index_parser.entry_at_label_path(label_path)[0]
+
+    @check_page
     def insert_index_placeholder(
         self,
         render_index_function: Callable[["FPDF", list[TextIndexEntry]], None],
@@ -381,7 +402,7 @@ class FPDF(fpdf.FPDF):
                 "A placeholder for the index has already been defined on page "
                 f"{self.index_placeholder.start_page}"
             )
-            raise fpdf.errors.FPDFException(msg)
+            raise FPDFException(msg)
         self.index_placeholder = IndexPlaceholder(
             render_index_function,
             self.page,
@@ -394,8 +415,8 @@ class FPDF(fpdf.FPDF):
         for _ in range(pages):
             self._perform_page_break()
 
-    @fpdf.fpdf.check_page
-    @fpdf.deprecation.support_deprecated_txt_arg
+    @check_page
+    @support_deprecated_txt_arg
     def multi_cell(
         self,
         w: float,
@@ -486,7 +507,7 @@ class FPDF(fpdf.FPDF):
                 `False`.
             output: Defines what this method returns. If several enum values are
                 joined, the result will be a tuple.
-            txt: [**DEPRECATED since v2.7.6**] string to print.
+            txt: [**DEPRECATED since v2.7.6**] String to print.
             center: Center the cell horizontally on the page. Defaults to
                 `False`.
             padding: Padding to apply around the text. Defaults to `0`.
@@ -522,7 +543,7 @@ class FPDF(fpdf.FPDF):
                     ' Use instead dry_run=True and output="LINES".'
                 ),
                 DeprecationWarning,
-                stacklevel=fpdf.deprecation.get_stack_level(),
+                stacklevel=get_stack_level(),
             )
         if dry_run or split_only:
             with self._disable_writing():
@@ -550,7 +571,7 @@ class FPDF(fpdf.FPDF):
                     first_line_indent=first_line_indent,
                 )
         if not self.font_family:
-            raise fpdf.errors.FPDFException(
+            raise FPDFException(
                 "No font set, you need to call set_font() beforehand"
             )
         if isinstance(w, str) or isinstance(h, str):
@@ -587,7 +608,7 @@ class FPDF(fpdf.FPDF):
                     f"new_y=YPos.{new_y.name}."
                 ),
                 DeprecationWarning,
-                stacklevel=fpdf.errors.get_stack_level(),
+                stacklevel=get_stack_level(),
             )
         align = Align.coerce(align)
 
@@ -897,7 +918,7 @@ class FPDF(fpdf.FPDF):
                         f"{self._compliance.label} requires at least one "
                         "embedded file"
                     )
-                    raise fpdf.errors.PDFAComplianceError(msg)
+                    raise PDFAComplianceError(msg)
             if linearize:
                 output_producer_class = LinearizedOutputProducer
             output_producer = output_producer_class(self)
