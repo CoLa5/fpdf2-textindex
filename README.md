@@ -125,12 +125,12 @@ The index directive in the example will:
    top-level entry that leads to the directive's location in the text on the
    corresponding PDF page. If the entry or subentry do not exist, they will be
    created.
-2. Define the alias `"#demo-alias"` for the path to the subentry (`"foo"` >
+2. Define the alias `"#demo"` for the path to the subentry (`"foo"` >
    `"bar baz"`).
 3. Adds cross-references to the entry:
-  - A SEE-cross reference to the `"bar"` top-level entry,
-  - An SEE ALSO-cross reference to the `"fiz"` subentry within the `"baz"`
-    top-level entry.
+   - A SEE-cross reference to the `"bar"` top-level entry,
+   - An SEE ALSO-cross reference to the `"fiz"` subentry within the `"baz"`
+     top-level entry.
 
 4. Apply the `"whiz"` suffix to the directive's reference locator.
 5. Sort the entry as if its heading starts with `"z"`.
@@ -150,8 +150,12 @@ ALSO-cross reference, but not all three at the same time.
 
 ## Example
 
-An example can be created by [`example/textindex_figures.py`](https://github.com/CoLa5/fpdf2-textindex/blob/main/example/textindex_figures.py#L130)
-and produces [textindex_figures.pdf](https://cola5.github.io/fpdf2-textindex/assets/textindex_figures.pdf) with all the examples from [Math Gemmell's website](https://mattgemmell.scot/textindex/).
+An example can be created by
+[`example/textindex_figures.py`](https://github.com/CoLa5/fpdf2-textindex/blob/main/example/textindex_figures.py#L130)
+and produces
+[textindex_figures.pdf](https://cola5.github.io/fpdf2-textindex/assets/textindex_figures.pdf)
+with all the examples from
+[Math Gemmell's website](https://mattgemmell.scot/textindex/).
 
 ---
 
