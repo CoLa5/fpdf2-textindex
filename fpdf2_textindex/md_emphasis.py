@@ -108,7 +108,7 @@ class MDEmphasis(enum.IntFlag):
 
 
 MDEmphasis.NONE = MDEmphasis(0)
-"""None."""
+"""No marker."""
 
 # Add markers and patterns for formatting and parsing
 MDEmphasis.MARKERS = {MDEmphasis.NONE: ""}

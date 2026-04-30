@@ -73,6 +73,16 @@ repos:
   # From https://github.com/py-pdf/fpdf2
   - repo: local
     hooks:
+      - id: backticked-bool-none-in-docstrings
+        name: Require `None` / `True` / `False` (backticked) in """-docstrings
+        language: pygrep
+        entry: '(?s)"""(?:(?!""").)*?(?<!`)(None|True|False)(?!`)(?:(?!""").)*?"""'
+        files: ^fpdf2_textindex/.*\.py$
+      - id: backticked-strings-in-docstrings
+        name: Require `"..."` (backticked) in """ docstrings
+        language: pygrep
+        entry: '(?s)"""(?:(?!""").)*?(?<!`)"[^"\n]+"(?!`)(?:(?!""").)*?"""'
+        files: ^fpdf2_textindex/.*\.py$
       - id: no-print-in-sources
         name: Ensure no print() statement appears in fpdf2_textindex sources
         language: pygrep
