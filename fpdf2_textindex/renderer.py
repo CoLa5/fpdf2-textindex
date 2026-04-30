@@ -391,8 +391,11 @@ class TextIndexRenderer:
             )
             w += 2 * pdf.c_margin + self.level_indent
 
-        assert pdf.x == prev_x and pdf.y == prev_y, (
-            "position changed during calculation of entry height"
+        assert pdf.x == prev_x, (
+            "x-position changed during calculation of entry height"
+        )
+        assert pdf.y == prev_y, (
+            "y-position changed during calculation of entry height"
         )
         return w, h
 

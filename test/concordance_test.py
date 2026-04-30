@@ -14,7 +14,7 @@ CONCORDANCE_FILE: pathlib.Path = DATA / "concordance.tsv"
 
 
 @pytest.mark.parametrize(
-    ["text", "parsed_text"],
+    ("text", "parsed_text"),
     [
         (
             "Single-tap iPad or double-tapped ipad lead to simultaneous layer "
@@ -76,7 +76,7 @@ def create_concordance_test_cases() -> Iterator[
 
 
 @pytest.mark.parametrize(
-    ["msg", "text", "parsed_text", "entries", "warn_msg"],
+    ("msg", "text", "parsed_text", "entries", "warn_msg"),
     list(create_concordance_test_cases()),
 )
 def test_parser_concordance(
@@ -116,8 +116,5 @@ def test_parser_concordance(
         r.message for r in caplog.records if r.levelno == logging.WARNING
     ]
     if cap_warn_msgs or warn_msg:
-        assert warn_msg is not None and warn_msg in cap_warn_msgs, (
-            msg,
-            warn_msg,
-            cap_warn_msgs,
-        )
+        assert warn_msg is not None, (msg, warn_msg, cap_warn_msgs)
+        assert warn_msg in cap_warn_msgs, (msg, warn_msg, cap_warn_msgs)

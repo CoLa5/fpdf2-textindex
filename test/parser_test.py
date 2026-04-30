@@ -8,7 +8,7 @@ from test.conftest import create_figure_test_cases
 
 
 @pytest.mark.parametrize(
-    ["msg", "text", "parsed_text", "entries", "warn_msg"],
+    ("msg", "text", "parsed_text", "entries", "warn_msg"),
     list(create_figure_test_cases()),
 )
 def test_parser(
@@ -42,8 +42,4 @@ def test_parser(
         r.message for r in caplog.records if r.levelno == logging.WARNING
     ]
     if cap_warn_msgs or warn_msg:
-        assert warn_msg is not None and warn_msg in cap_warn_msgs, (
-            msg,
-            warn_msg,
-            cap_warn_msgs,
-        )
+        assert warn_msg in cap_warn_msgs, (msg, warn_msg, cap_warn_msgs)

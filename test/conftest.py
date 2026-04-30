@@ -794,7 +794,7 @@ def create_figure_test_cases() -> Iterator[
     )
 
 
-@pytest.fixture(autouse=True, scope="function")
-def reset_entry_next_id() -> Iterator[None]:
+@pytest.fixture(autouse=True)
+def reset_entry_next_id() -> None:
     TextIndexEntry._next_id = 0
-    yield
+    return

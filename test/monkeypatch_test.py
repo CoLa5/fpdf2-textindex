@@ -19,9 +19,11 @@ def test_monkeypatch() -> None:
     # Apply patch
     import fpdf2_textindex  # noqa: F401
 
-    assert hasattr(fpdf.FPDF, "__PATCHED__") and fpdf.FPDF.__PATCHED__
-    assert hasattr(fpdf.fpdf.FPDF, "__PATCHED__") and fpdf.fpdf.FPDF.__PATCHED__
-    assert (
-        hasattr(fpdf.fpdf.MultiLineBreak, "__PATCHED__")
-        and fpdf.fpdf.MultiLineBreak.__PATCHED__
-    )
+    assert hasattr(fpdf.FPDF, "__PATCHED__")
+    assert fpdf.FPDF.__PATCHED__
+
+    assert hasattr(fpdf.fpdf.FPDF, "__PATCHED__")
+    assert fpdf.fpdf.FPDF.__PATCHED__
+
+    assert hasattr(fpdf.fpdf.MultiLineBreak, "__PATCHED__")
+    assert fpdf.fpdf.MultiLineBreak.__PATCHED__

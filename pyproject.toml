@@ -120,6 +120,8 @@ preview = true
 select = [
   # flake8-annotations
   "ANN",
+  # flake8-bugbear
+  "B",
   # pydocstyle
   "D",
   # pydoclint
@@ -134,18 +136,18 @@ select = [
   "FIX",
   # flake8-logging-format
   "G",
-  # flake8-logging
-  "LOG",
-  # pyupgrade
-  "UP",
-  # flake8-bugbear
-  "B",
-  # flake8-simplify
-  "SIM",
   # isort
   "I",
+  # flake8-logging
+  "LOG",
+  # flake8-pytest-style
+  "PT",
   # Ruff-specific rules
-  "RUF"
+  "RUF",
+  # flake8-simplify
+  "SIM",
+  # pyupgrade
+  "UP",
 ]
 extend-ignore = [
   # missing docstring in magic method

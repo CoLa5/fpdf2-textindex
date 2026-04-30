@@ -103,7 +103,7 @@ def create_ref_test_cases() -> Iterator[tuple[str, str, list[str]]]:
 
 
 @pytest.mark.parametrize(
-    ["msg", "text", "prepared_texts"],
+    ("msg", "text", "prepared_texts"),
     list(create_ref_test_cases()),
 )
 def test_renderer_prepare_ref(
@@ -297,7 +297,7 @@ def create_see_test_cases() -> Iterator[tuple[str, str, list[str]]]:
 
 
 @pytest.mark.parametrize(
-    ["msg", "text", "prepared_texts"],
+    ("msg", "text", "prepared_texts"),
     list(create_see_test_cases()),
 )
 def test_renderer_prepare_see(
@@ -502,7 +502,7 @@ def create_see_also_test_cases() -> Iterator[tuple[str, str, list[str]]]:
 
 
 @pytest.mark.parametrize(
-    ["msg", "text", "prepared_texts"],
+    ("msg", "text", "prepared_texts"),
     list(create_see_also_test_cases()),
 )
 def test_renderer_prepare_see_also(
@@ -692,7 +692,7 @@ def test_index_placeholder_arguments(
 
 
 @pytest.mark.parametrize(
-    ["key", "create_fn"],
+    ("key", "create_fn"),
     [
         ("ref", create_ref_test_cases),
         ("see", create_see_test_cases),

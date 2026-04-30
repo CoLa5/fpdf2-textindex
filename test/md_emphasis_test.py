@@ -51,12 +51,18 @@ def create_examples() -> Iterator[tuple[MDEmphasis, str]]:
     )
 
 
-@pytest.mark.parametrize(["mde", "formatted_text"], list(create_examples()))
+@pytest.mark.parametrize(
+    ("mde", "formatted_text"),
+    list(create_examples()),
+)
 def test_format(mde: MDEmphasis, formatted_text: str) -> None:
     assert mde.format("text") == formatted_text
 
 
-@pytest.mark.parametrize(["mde", "formatted_text"], list(create_examples()))
+@pytest.mark.parametrize(
+    ("mde", "formatted_text"),
+    list(create_examples()),
+)
 def test_parse(mde: MDEmphasis, formatted_text: str) -> None:
     t, m = MDEmphasis.parse(formatted_text)
     assert t == "text"

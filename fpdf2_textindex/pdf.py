@@ -136,7 +136,8 @@ class FPDF(fpdf.FPDF):
                     or link_name.startswith(const.ENTRY_ID_PREFIX)
                 ):
                     continue
-                assert a.rect.startswith("[") and a.rect.endswith("]"), a.rect
+                assert a.rect.startswith("[")
+                assert a.rect.endswith("]")
                 x, y_h, x_w, y = map(
                     lambda x: float(x) / self.k,
                     a.rect[1:-1].split(" ", maxsplit=3),
