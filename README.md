@@ -9,7 +9,7 @@
 [![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/CoLa5/d548905d5994ebc1c3f15e8cfb9003e2/raw/covbadge.json)](https://cola5.github.io/fpdf2-textindex/coverage/)
 [![Pypi Trusted Publisher: enabled](https://img.shields.io/badge/Pypi_Trusted_Publisher-enabled-green.svg)](https://blog.pypi.org/posts/2023-04-20-introducing-trusted-publishers/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v1.json)](https://github.com/charliermarsh/ruff)
-[![Checks: flake-8, isort, mypy](https://img.shields.io/badge/Checks-flake-8,_isort,_mypy-green.svg)](https://github.com/CoLa5/fpdf2-textindex/blob/main/.pyproject.toml)
+[![Checks: flake-8, isort, mypy](https://img.shields.io/badge/Checks-flake--8,_isort,_mypy-green.svg)](https://github.com/CoLa5/fpdf2-textindex/blob/main/.pyproject.toml)
 
 [![GitHub last commit](https://img.shields.io/github/last-commit/CoLa5/fpdf2-textindex)](https://github.com/CoLa5/fpdf2-textindex/commits/main)
 
@@ -41,7 +41,7 @@ pdf.output("example.pdf")
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
 directives in a text:
 
-> Most mechanical keyboard firmware{^} supports the use of [key > > > >
+> Most mechanical keyboard firmware{^} supports the use of [key > > > > >
 > combinations]{^}.
 
 Print it in the PDF by enabling markdown in `fpdf2.FPDF.cell` or
