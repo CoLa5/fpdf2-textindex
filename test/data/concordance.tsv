@@ -1,4 +1,6 @@
-=iPad|iPhone|Mac					"Apple platforms"
+=iPad|iPhone					    "Apple platforms"
+\=2                                 "equal to 2"
+Mac                                 "Apple platforms"
 (single-|double-)?tap(s|ped|ping)?	tap
 config(uration)?s?\b				|firmware
 simultaneous(ly)?					|combo;+chord

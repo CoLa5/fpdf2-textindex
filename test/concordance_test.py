@@ -13,6 +13,36 @@ from test.conftest import DATA
 CONCORDANCE_FILE: pathlib.Path = DATA / "concordance.tsv"
 
 
+def test_sequence() -> None:
+    cparser = ConcordanceList.from_file(CONCORDANCE_FILE)
+    assert len(cparser) == 7
+    for pattern, replacement in iter(cparser):
+        assert isinstance(pattern, str)
+        assert isinstance(replacement, str)
+    for i in range(len(cparser)):
+        assert isinstance(cparser[i], tuple)
+        assert len(cparser[i]) == 2
+        pattern, replacement = cparser[i]
+        assert isinstance(pattern, str)
+        assert isinstance(replacement, str)
+    for pattern, replacement in cparser[1:3]:
+        assert isinstance(pattern, str)
+        assert isinstance(replacement, str)
+
+
+def test_empty_file(tmp_path: pathlib.Path) -> None:
+    file = tmp_path / "concordance.tsv"
+    with file.open(mode="w") as f:
+        f.write("\n")
+    cparser = ConcordanceList.from_file(file)
+    assert len(cparser) == 0
+
+
+def test_invalid_file() -> None:
+    with pytest.raises(OSError):  # noqa: PT011
+        ConcordanceList.from_file("invalid_file")
+
+
 @pytest.mark.parametrize(
     ("text", "parsed_text"),
     [
@@ -26,7 +56,7 @@ CONCORDANCE_FILE: pathlib.Path = DATA / "concordance.tsv"
         )
     ],
 )
-def test_concordance(
+def test_parse_text(
     text: str,
     parsed_text: str,
 ) -> None:
@@ -79,7 +109,7 @@ def create_concordance_test_cases() -> Iterator[
     ("msg", "text", "parsed_text", "entries", "warn_msg"),
     list(create_concordance_test_cases()),
 )
-def test_parser_concordance(
+def test_parser_with_concordance(
     caplog: pytest.LogCaptureFixture,
     msg: str,
     text: str,
