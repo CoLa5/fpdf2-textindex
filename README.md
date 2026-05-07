@@ -36,7 +36,10 @@ pdf.insert_index_placeholder(TextIndexRenderer().render_text_index)
 pdf.output("example.pdf")
 ```
 
-## Adding a Text Index Entry
+The text index will have a single entry:
+- example, 1
+
+## Adding Text Index Entries
 
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
 directives in a text:
@@ -79,11 +82,11 @@ will be printed in the PDF as:
 Similarly, the marks for italics `__`, underline `--` and strikethrough `~~` are
 supported.
 
-## Inserting a Text Index
+## Inserting the Text Index
 
 Use the adapted FPDF-class of this package that offers a
 `fpdf2_textindex.FPDF.insert_index_placeholder`-method to define a placeholder
-for the **text index**. A page break is triggered after inserting the text
+for the **text index**. At least, one page break is triggered after inserting the text
 index:
 
 ```python3
@@ -105,17 +108,18 @@ Parameters:
   created at the end of the document and then reordered when the final PDF is
   produced.
 
-**Note**: Enabling `allow_extra_pages` may affect page numbering for headers or
-footers. Since extra text index pages are added after the document content, they
-might cause page numbers to appear out of sequence. To maintain consistent
-numbering, use **Page Labels** to assign a specific numbering style to the index
-pages. When using Page Labels, any extra text index pages will follow the
-numbering style of the first text index page
+> [!NOTE]
+> Enabling `allow_extra_pages` may affect page numbering for headers or
+> footers. Since extra text index pages are added after the document content, they
+> might cause page numbers to appear out of sequence. To maintain consistent
+> numbering, use **Page Labels** to assign a specific numbering style to the index
+> pages. When using Page Labels, any extra text index pages will follow the
+> numbering style of the first text index page
 
 ## Text Index Directive Syntax
 
 ```text
-_example_{^foo>"\* text"#demo |bar;+baz>fiz [whiz] ~z !}
+__example__{^foo>"\* text"#demo |bar;+baz>fiz [whiz] ~z !}
            1            2     3             4      5  6
 ```
 
@@ -145,8 +149,8 @@ The resulting index with example page numbers would look like:
   - example text, **6** (_see_ bar). _See also_ baz: fiz
 
 In a real index, this would provoke an error, because either you set a reference
-locator to a PDF page and a SEE ALSO-cross reference or a SEE- and a SEE
-ALSO-cross reference, but not all three at the same time.
+locator to a PDF page and a **SEE ALSO**-cross reference or a **SEE**- and a **SEE
+ALSO**-cross reference, but not all three at the same time.
 
 ## Example
 
@@ -191,10 +195,7 @@ is used to render the index. The package supports a reference implementation,
 but the user can implement its own version if necessary.
 
 The reference `render_index_function` renders each index entry according to
-[The Chicago Manual of Style - Indexes](https://www.chicagomanualofstyle.org/book/ed18/part3/ch15/toc.html).
-The references (locators) of each entry are matched by its id to an unset link
-annotation in the PDF and, thus, to a page number/label, which is used to print
-the reference (locator) in the index:
+[The Chicago Manual of Style - Indexes](https://www.chicagomanualofstyle.org/book/ed18/part3/ch15/toc.html):
 
 `"example, 3"`
 
@@ -203,7 +204,7 @@ thus, is finally set.
 
 In the reference implementation, inverted links are added as well: To create a
 connection of the index entry to the text page, the printed page number will
-point to the text page as well.  
+point to the text page.  
 So clicking on `"example"` on the text page will lead to corresponding entry in
 the text index. Clicking on the reference (locator) in the text index, page
 `"3"`, will return the reader to the text page. Cross-references are connected
