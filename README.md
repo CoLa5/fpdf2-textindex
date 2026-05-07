@@ -130,17 +130,16 @@ The index directive in the example will:
    corresponding PDF page. If the entry or subentry do not exist, they will be
    created.
 2. Define the alias `"#demo"` for the path to the subentry (`"foo"` >
-   `"bar baz"`).
+   `"example text"`).
 3. Adds cross-references to the entry:
-   - A SEE-cross reference to the `"bar"` top-level entry,
-   - An SEE ALSO-cross reference to the `"fiz"` subentry within the `"baz"`
+   - A **SEE**-cross reference to the `"bar"` top-level entry,
+   - A **SEE ALSO**-cross reference to the `"fiz"` subentry within the `"baz"`
      top-level entry.
-
 4. Apply the `"whiz"` suffix to the directive's reference locator.
 5. Sort the entry as if its heading starts with `"z"`.
 6. Apply an emphasis (bold) to the mark's reference locator.
 
-The resulting index with example page numbers would look like:
+The resulting index with page numbers would look like: 
 
 - bar, 3
 - baz
@@ -148,6 +147,7 @@ The resulting index with example page numbers would look like:
 - foo
   - example text, **6** (_see_ bar). _See also_ baz: fiz
 
+if index directives with page references (locators) for `"bar"` and `"baz" > "fiz"` have been added as well.  
 In a real index, this would provoke an error, because either you set a reference
 locator to a PDF page and a **SEE ALSO**-cross reference or a **SEE**- and a **SEE
 ALSO**-cross reference, but not all three at the same time.
