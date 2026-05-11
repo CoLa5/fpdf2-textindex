@@ -102,8 +102,7 @@ jobs:
           fi
           # Executing all tests
           uv run pytest -v \
-          --cov-report "markdown:${COVERAGE_OUTPUT}" \
-          "$COV_HTML" \
+          --cov-report "markdown:${COVERAGE_OUTPUT}" "$COV_HTML" \
           --md-report --md-report-output "$TEST_OUTPUT"
           # Save report file locations in env var
           echo "COVR_FILE=${COVERAGE_OUTPUT}" >> "$GITHUB_ENV"
