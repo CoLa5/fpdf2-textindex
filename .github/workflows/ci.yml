@@ -182,7 +182,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-          token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+          persist-credentials: true
 
       - name: Setup uv
         uses: ./.github/actions/setup-uv
@@ -201,9 +201,12 @@ jobs:
           echo "Git email: $(git config --get user.email)"
 
           git add CHANGELOG.md
-          git diff --cached --quiet && exit 0
-          git commit -m "docs(changelog): Update CHANGELOG.md"
-          git push
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs(changelog): Update CHANGELOG.md"
+            git push
+          fi
 
   docs:
     name: Build Docs
