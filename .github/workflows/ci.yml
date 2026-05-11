@@ -92,18 +92,19 @@ jobs:
           TEST_OUTPUT: test_report.md
         shell: bash
         run: |
-          # Ensuring there is no `generate=True` left in calls to
-          # assert_pdf_equal
+          # Ensure there is no `generate=True` left in calls to assert_pdf_equal
           grep -IRF generate=True test/ && exit 1
-          # Create HTML coverage files if in main-branch
-          COV_HTML=""
+          # Execute all tests (create HTML coverage files if in main-branch)
+          ARGS=(
+            -v
+            --cov-report "markdown:${COVERAGE_OUTPUT}"
+            --md-report
+            --md-report-output "$TEST_OUTPUT"
+          )
           if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
-            COV_HTML="--cov-report html"
+            ARGS+=(--cov-report html)
           fi
-          # Executing all tests
-          uv run pytest -v \
-          --cov-report "markdown:${COVERAGE_OUTPUT}" "${COV_HTML[@]}" \
-          --md-report --md-report-output "$TEST_OUTPUT"
+          uv run pytest "${ARGS[@]}"
           # Save report file locations in env var
           echo "COVR_FILE=${COVERAGE_OUTPUT}" >> "$GITHUB_ENV"
           echo "TEST_FILE=${TEST_OUTPUT}" >> "$GITHUB_ENV"
