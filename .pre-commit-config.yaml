@@ -31,7 +31,12 @@ repos:
     rev: v4.10.0
     hooks:
       - id: commitizen
+        additional_dependencies:
+          - "git+https://github.com/CoLa5/cz-keep-a-changelog-plugin.git@0.0.3"
+        stages: [commit-msg]
       - id: commitizen-branch
+        additional_dependencies:
+          - "git+https://github.com/CoLa5/cz-keep-a-changelog-plugin.git@0.0.3"
         stages: [pre-push]
 
   - repo: https://github.com/astral-sh/uv-pre-commit
@@ -45,7 +50,7 @@ repos:
         args: ["--frozen", "--output-file=requirements-dev.txt", "--quiet"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.10
+    rev: v0.15.11
     hooks:
       # Linter
       - id: ruff-check
@@ -79,7 +84,7 @@ repos:
         entry: '(?s)"""(?:(?!""").)*?(?<!`)(None|True|False)(?!`)(?:(?!""").)*?"""'
         files: ^fpdf2_textindex/.*\.py$
       - id: backticked-strings-in-docstrings
-        name: Require `"..."` (backticked) in """ docstrings
+        name: Require `"..."` (backticked) in """-docstrings
         language: pygrep
         entry: '(?s)"""(?:(?!""").)*?(?<!`)"[^"\n]+"(?!`)(?:(?!""").)*?"""'
         files: ^fpdf2_textindex/.*\.py$

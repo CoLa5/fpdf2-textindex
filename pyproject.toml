@@ -1,7 +1,3 @@
-[build-system]
-requires = ["uv_build>=0.8.12,<0.9.0"]
-build-backend = "uv_build"
-
 [project]
 name = "fpdf2-textindex"
 version = "0.1.0"
@@ -43,8 +39,9 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-  "pre-commit>=4.5.1",
-  "pylint>=4.0.5",
+  "commitizen==4.10.0",
+  "cz-keep-a-changelog-plugin",
+  "pre-commit>=4.6.0",
   "pytest>=8.4.2",
   "pytest-cov>=7.1.0",
   "pytest-md-report>=0.7.0",
@@ -60,13 +57,23 @@ Documentation = "https://cola5.github.io/fpdf2-textindex/"
 Code = "https://github.com/CoLa5/fpdf2-textindex"
 "Issue tracker" = "https://github.com/CoLa5/fpdf2-textindex/issues"
 
+[build-system]
+requires = ["uv_build>=0.8.12,<0.9.0"]
+build-backend = "uv_build"
+
 [tool.commitizen]
-name = "cz_conventional_commits"
+name = "cz_keep_a_changelog_plugin"
 tag_format = "$version"
-version_scheme = "pep440"
 version_provider = "uv"
-update_changelog_on_bump = true
+version_scheme = "pep440"
+breaking_change_exclamation_in_title = true
+bump_message = "bump: Bump version $current_version -> $new_version"
+changelog_merge_prerelease = true
 major_version_zero = true
+update_changelog_on_bump = true
+
+[tool.commitizen.cz_keep_a_changelog_plugin]
+issue_url_template = "https://github.com/CoLa5/fpdf2-textindex/issues/{{issue}}"
 
 [tool.coverage.run]
 branch = true
@@ -197,3 +204,6 @@ name = "testpypi"
 url = "https://test.pypi.org/simple/"
 publish-url = "https://test.pypi.org/legacy/"
 explicit = true
+
+[tool.uv.sources]
+cz-keep-a-changelog-plugin = { git = "https://github.com/CoLa5/cz-keep-a-changelog-plugin", rev = "0.0.3" }
