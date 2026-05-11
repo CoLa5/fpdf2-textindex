@@ -1,17 +1,16 @@
 name: "Setup uv environment"
 description: "Install system deps, Python, uv, and project dependencies"
+branding:
+  icon: "inbox"
+  color: "green"
 inputs:
   docs:
-    type: boolean
     description: "Enable --group docs flag for uv sync"
     required: false
     default: false
-
   python-version:
-    type: string
     description: "Python version to use"
     required: false
-
 runs:
   using: "composite"
   steps:
@@ -25,7 +24,6 @@ runs:
           exit 1
         fi
         echo "PY_VERSION=$PY_VERSION" >> "$GITHUB_ENV"
-
         if [ -n "${{ inputs.python-version }}" ]; then
           UV_PYTHON="${{ inputs.python-version }}"
         else
