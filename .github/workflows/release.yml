@@ -1,39 +1,96 @@
-name: Release to Pypi
+name: Release to Github & Pypi
 
 on:
   workflow_run:
-    workflows: ["publish-test"]
+    workflows: ["ci"]
     types: [completed]
 
 permissions:
   contents: read
 
 jobs:
-  run:
+  build:
+    name: Build Python distribution
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-    permissions:
-      id-token: write
-      contents: read
+    outputs:
+      valid_tag: ${{ steps.tag.outputs.valid_tag}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Check out
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: ./.github/actions/setup-uv
+      - name: Setup uv
+        uses: ./.github/actions/setup-uv
+
+      - name: Validate tag to be PEP440-conformant
+        id: tag
+        shell: bash
+        run: |
+          uv run python scripts/pep440_version.py "${GITHUB_REF_NAME}"
+          exit_code=$?
+          valid_tag=$([ "$exit_code" -eq 0 ] && echo true || echo false)
+          echo "valid_tag=${valid_tag}" >> "$GITHUB_OUTPUT"
 
       - name: Build
+        if: steps.tag.outputs.valid_tag == 'true'
         shell: bash
         run: |
           uv build
-          uv run python scripts/pip_hashes_md_report.py >> $GITHUB_STEP_SUMMARY
+          uv run python scripts/pip_hashes_md_report.py >> "$GITHUB_STEP_SUMMARY"
 
       - name: Smoke test (wheel & source distribution)
+        if: steps.tag.outputs.valid_tag == 'true'
         shell: bash
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          uv run --isolated --no-project --with dist/fpdf2_textindex-${VERSION}-py3-none-any.whl test/smoke_test.py
-          uv run --isolated --no-project --with dist/fpdf2_textindex-${VERSION}.tar.gz test/smoke_test.py
+          VERSION=${GITHUB_REF_NAME}
+          uv run --isolated --no-project --with "dist/fpdf2_textindex-${VERSION}-py3-none-any.whl" test/smoke_test.py
+          uv run --isolated --no-project --with "dist/fpdf2_textindex-${VERSION}.tar.gz" test/smoke_test.py
 
-      - name: Publish
+      - name: Upload distribution artifacts
+        if: steps.tag.outputs.valid_tag == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: artifact-dist
+          path: dist/
+
+  publish-github:
+    name: Publish Python distribution to GitHub
+    needs:
+      - build
+    if: |
+      startsWith(github.ref, 'refs/tags/') &&
+      needs.build.outputs.valid_tag == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+
+      - name: Setup uv
+        uses: ./.github/actions/setup-uv
+
+      - name: Create the changelog for release
         shell: bash
-        run: uv publish
+        run: |
+          VERSION=${GITHUB_REF_NAME}
+          uv run cz changelog "$VERSION" --dry-run | tail -n +12 > RELEASE.md
+
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: artifact-dist
+          path: dist/
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF_NAME}
+          gh release create "$GITHUB_REF_NAME" \
+          "dist/fpdf2_textindex-${VERSION}-py3-none-any.whl" \
+          "dist/fpdf2_textindex-${VERSION}.tar.gz" \
+          --title "$GITHUB_REF_NAME" \
+          --notes-file RELEASE.md
