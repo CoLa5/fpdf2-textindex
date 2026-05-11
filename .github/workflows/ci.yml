@@ -174,15 +174,34 @@ jobs:
     if: |
       github.ref == 'refs/heads/main' &&
       !startsWith(github.event.head_commit.message, 'docs(changelog):')
+    environment:
+      name: changelog
     permissions:
       contents: write
     runs-on: ubuntu-latest
     steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: app-token
+        with:
+          app-id: ${{ vars.CHANGELOG_APP_ID }}
+          private-key: ${{ secrets.CHANGELOG_SECRET }}
+
       - name: Check out
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-          persist-credentials: true
+          fetch-tags: true
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Get GitHub App User ID
+        id: get-user-id
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        shell: bash
+        run:
+          echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug
+          }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
 
       - name: Setup uv
         uses: ./.github/actions/setup-uv
@@ -194,8 +213,8 @@ jobs:
       - name: Commit changelog
         shell: bash
         run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
+          git config --local user.email "${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
           git config --local pull.rebase true
           echo "Git name: $(git config --get user.name)"
           echo "Git email: $(git config --get user.email)"
