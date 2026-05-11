@@ -39,6 +39,11 @@ repos:
           - "git+https://github.com/CoLa5/cz-keep-a-changelog-plugin.git@0.0.3"
         stages: [pre-push]
 
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.8.12
     hooks:
