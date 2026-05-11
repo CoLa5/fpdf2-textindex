@@ -37,6 +37,7 @@ pdf.output("example.pdf")
 ```
 
 The text index will have a single entry:
+
 - example, 1
 
 ## Adding Text Index Entries
@@ -86,8 +87,8 @@ supported.
 
 Use the adapted FPDF-class of this package that offers a
 `fpdf2_textindex.FPDF.insert_index_placeholder`-method to define a placeholder
-for the **text index**. At least, one page break is triggered after inserting the text
-index:
+for the **text index**. At least, one page break is triggered after inserting
+the text index:
 
 ```python3
 ...
@@ -109,12 +110,12 @@ Parameters:
   produced.
 
 > [!NOTE]
-> Enabling `allow_extra_pages` may affect page numbering for headers or
-> footers. Since extra text index pages are added after the document content, they
-> might cause page numbers to appear out of sequence. To maintain consistent
-> numbering, use **Page Labels** to assign a specific numbering style to the index
-> pages. When using Page Labels, any extra text index pages will follow the
-> numbering style of the first text index page
+> Enabling `allow_extra_pages` may affect page numbering for headers or footers.
+> Since extra text index pages are added after the document content, they might
+> cause page numbers to appear out of sequence. To maintain consistent
+> numbering, use **Page Labels** to assign a specific numbering style to the
+> index pages. When using Page Labels, any extra text index pages will follow
+> the numbering style of the first text index page
 
 ## Text Index Directive Syntax
 
@@ -139,7 +140,7 @@ The index directive in the example will:
 5. Sort the entry as if its heading starts with `"z"`.
 6. Apply an emphasis (bold) to the mark's reference locator.
 
-The resulting index with page numbers would look like: 
+The resulting index with page numbers would look like:
 
 - bar, 3
 - baz
@@ -147,10 +148,11 @@ The resulting index with page numbers would look like:
 - foo
   - example text, **6** (_see_ bar). _See also_ baz: fiz
 
-if index directives with page references (locators) for `"bar"` and `"baz" > "fiz"` have been added as well.  
+if index directives with page references (locators) for `"bar"` and `"baz"` >
+`"fiz"` have been added as well.  
 In a real index, this would provoke an error, because either you set a reference
-locator to a PDF page and a **SEE ALSO**-cross reference or a **SEE**- and a **SEE
-ALSO**-cross reference, but not all three at the same time.
+locator to a PDF page and a **SEE ALSO**-cross reference or a **SEE**- and a
+**SEE ALSO**-cross reference, but not all three at the same time.
 
 ## Example
 
