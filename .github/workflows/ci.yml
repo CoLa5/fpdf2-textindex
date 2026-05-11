@@ -150,7 +150,8 @@ jobs:
         id: set_total
         shell: bash
         run: |
-          echo "total=$( uv run python -m coverage report --format=total )" >> "$GITHUB_OUTPUT"
+          total=$( uv run python -m coverage report --format=total )
+          echo "total=${total}" >> "$GITHUB_OUTPUT"
 
       - name: Create coverage badge
         if: |
@@ -194,14 +195,19 @@ jobs:
           fetch-tags: true
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Get GitHub App User ID
-        id: get-user-id
+      - name: Set Git User
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         shell: bash
-        run:
-          echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug
-          }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        run: |
+          user_id=$( gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id )
+          git_user_name="${{ steps.app-token.outputs.app-slug }}[bot]"
+          git_user_email="${user_id}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+          git config --local user.name "${git_user_name}"
+          git config --local user.email "${git_user_email}"
+          git config --local pull.rebase true
+          echo "Git name: $(git config --get user.name)"
+          echo "Git email: $(git config --get user.email)"
 
       - name: Setup uv
         uses: ./.github/actions/setup-uv
@@ -213,12 +219,6 @@ jobs:
       - name: Commit changelog
         shell: bash
         run: |
-          git config --local user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
-          git config --local user.email "${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-          git config --local pull.rebase true
-          echo "Git name: $(git config --get user.name)"
-          echo "Git email: $(git config --get user.email)"
-
           git add CHANGELOG.md
           if git diff --cached --quiet; then
             echo "No changes to commit"
