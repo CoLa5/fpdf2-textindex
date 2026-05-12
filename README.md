@@ -43,6 +43,28 @@ The text index will have a single entry:
 
 - example, 1
 
+## Installation
+
+**Using pip:**
+
+```bash
+# Install
+pip install fpdf2_textindex
+
+# Keep it updated
+pip upgrade fpdf2_textindex
+```
+
+**Using uv:**
+
+```bash
+# Install
+uv install fpdf2_textindex
+
+# Keep it updated
+uv upgrade fpdf2_textindex
+```
+
 ## Adding Text Index Entries
 
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
