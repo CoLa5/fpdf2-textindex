@@ -11,6 +11,10 @@ on:
         description: "Python version to use"
         required: true
         type: string
+    secrets:
+      gist-secret:
+        description: "Gist secret to push coverage json to"
+        required: true
 permissions:
   contents: read
 jobs:
@@ -113,7 +117,7 @@ jobs:
           startsWith(inputs.platform, 'ubuntu') && inputs.python-version == env.PY_VERSION
         uses: schneegans/dynamic-badges-action@0e50b8bad39e7e1afd3e4e9c2b7dd145fad07501 # v1.8.0
         with:
-          auth: ${{ secrets.GIST_SECRET }}
+          auth: ${{ secrets.gist-secret }}
           gistID: d548905d5994ebc1c3f15e8cfb9003e2
           filename: covbadge.json
           label: Coverage

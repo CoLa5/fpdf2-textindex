@@ -28,6 +28,8 @@ jobs:
     with:
       platform: ${{ matrix.platform }}
       python-version: ${{ matrix.python-version }}
+    secrets:
+      gist-secret: ${{ secrets.GIST_SECRET }}
 
   changelog:
     name: Changelog
