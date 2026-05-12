@@ -30,7 +30,6 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-          persist-credentials: false
           ref: ${{ github.head_ref }}
           token: ${{ steps.app-token.outputs.token }}
 
