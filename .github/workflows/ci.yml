@@ -40,6 +40,10 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/changelog.yml
+    with:
+      app-client-id: ${{ vars.APP_CLIENT_ID }}
+    secrets:
+      app-private-key: ${{ secrets.APP_SECRET }}
 
   docs:
     name: Docs
@@ -64,3 +68,7 @@ jobs:
       contents: write
       id-token: write
     uses: ./.github/workflows/release.yml
+    with:
+      app-client-id: ${{ vars.APP_CLIENT_ID }}
+    secrets:
+      app-private-key: ${{ secrets.APP_SECRET }}

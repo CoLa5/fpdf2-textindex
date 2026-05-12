@@ -1,21 +1,28 @@
 name: changelog
 on:
   workflow_call:
+    inputs:
+      app-client-id:
+        description: "GitHub App Client ID"
+        required: true
+        type: string
+    secrets:
+      app-private-key:
+        description: "GitHub App private key"
+        required: true
 permissions:
   contents: write
 jobs:
   changelog:
     name: Changelog
-    environment:
-      name: github-app
     runs-on: ubuntu-latest
     steps:
       - name: Create GitHub App Token
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: app-token
         with:
-          client-id: ${{ vars.APP_CLIENT_ID }}
-          private-key: ${{ secrets.APP_SECRET }}
+          client-id: ${{ inputs.app-client-id }}
+          private-key: ${{ secrets.app-private-key }}
           owner: ${{ github.repository_owner }}
 
       - name: Check out

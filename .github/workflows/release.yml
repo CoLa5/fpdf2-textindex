@@ -1,6 +1,15 @@
 name: release
 on:
   workflow_call:
+    inputs:
+      app-client-id:
+        description: "GitHub App Client ID"
+        required: true
+        type: string
+    secrets:
+      app-private-key:
+        description: "GitHub App private key"
+        required: true
 permissions:
   contents: write
   id-token: write
@@ -51,8 +60,6 @@ jobs:
   publish-github:
     name: Publish Python distribution to GitHub
     needs: build
-    environment:
-      name: github-app
     if: needs.build.outputs.valid_tag == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -60,8 +67,9 @@ jobs:
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: app-token
         with:
-          app-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.APP_SECRET }}
+          client-id: ${{ inputs.app-client-id }}
+          private-key: ${{ secrets.app-private-key }}
+          owner: ${{ github.repository_owner }}
 
       - name: Check out
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -81,6 +89,7 @@ jobs:
           git config --local user.name "${git_user_name}"
           git config --local user.email "${git_user_email}"
           git config --local pull.rebase true
+          gh auth setup-git
           echo "Git name: $(git config --get user.name)"
           echo "Git email: $(git config --get user.email)"
 
