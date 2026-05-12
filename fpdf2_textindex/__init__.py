@@ -2,8 +2,10 @@
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat)](https://www.gnu.org/licenses/gpl-3.0)
 
 .. include:: ../README.md
-   :start-line: 8
+   :end-before: # fpdf2 Text Index
 
+.. include:: ../README.md
+   :start-after: # fpdf2 Text Index
 ---
 
 The module gives direct access to some classes defined in submodules:
