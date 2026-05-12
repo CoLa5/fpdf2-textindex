@@ -197,7 +197,7 @@ extend-exclude = ["requirements-dev.txt"]
 [tool.uv.build-backend]
 module-name = "fpdf2_textindex"
 module-root = ""
-source_include = ["LICENSE", "README.md"]
+source_include = ["CHANGELOG.md", "LICENSE", "README.md"]
 
 [[tool.uv.index]]
 name = "testpypi"
