@@ -1,4 +1,4 @@
-name: CI
+name: ci
 
 on:
   pull_request:
@@ -11,217 +11,53 @@ permissions:
   contents: read
 
 jobs:
-  pre-commit: # https://github.com/pre-commit/action/blob/main/action.yml
-    name: Pre-commit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup uv
-        uses: ./.github/actions/setup-uv
-
-      - name: Cache pre-commit
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae #v5.0.5
-        with:
-          path: ~/.cache/pre-commit
-          key:
-            pre-commit-3|${{ env.pythonLocation }}|${{
-            hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Run pre-commit
-        env:
-          PRE_COMMIT_OUTPUT: pre_commit_report.md
-        shell: bash
-        run: |
-          uv run --no-sync --with pre-commit-uv pre-commit run --all-files \
-          --color=always --hook-stage=manual --show-diff-on-failure |
-          uv run python scripts/pre_commit_md_report.py \
-          --report "markdown:${PRE_COMMIT_OUTPUT}"
-          echo "PRE_COMMIT_FILE=${PRE_COMMIT_OUTPUT}" >> "$GITHUB_ENV"
-
-      - name: Output pre-commit report to the job summary
-        if: always()
-        shell: bash
-        run: |
-          if [ -f "$PRE_COMMIT_FILE" ]; then
-            {
-              echo "<details><summary>Pre-Commit Report</summary>"
-              echo ""
-              cat "$PRE_COMMIT_FILE"
-              echo ""
-              echo "</details>"
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
+  pre-commit:
+    name: Pre-Commit
+    if: ${{ !startsWith(github.event.head_commit.message, 'docs(changelog):') }}
+    uses: ./.github/workflows/pre-commit.yml
 
   test:
     name: Test
     needs: pre-commit
+    if: ${{ !startsWith(github.event.head_commit.message, 'docs(changelog):') }}
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         platform: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - name: Check out
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Install qpdf on Ubuntu
-        if: startsWith(matrix.platform, 'ubuntu')
-        shell: bash
-        run: |
-          sudo apt-get update --allow-releaseinfo-change
-          sudo apt-get install qpdf
-          qpdf --version
-
-      - name: Install qpdf on Windows
-        if: startsWith(matrix.platform, 'windows')
-        shell: pwsh
-        run: |
-          choco install qpdf -y
-          qpdf --version
-
-      - name: Setup uv
-        uses: ./.github/actions/setup-uv
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Run tests
-        env:
-          COVERAGE_OUTPUT: cov_report.md
-          TEST_OUTPUT: test_report.md
-        shell: bash
-        run: |
-          # Ensure there is no `generate=True` left in calls to assert_pdf_equal
-          grep -IRF generate=True test/ && exit 1
-          # Execute all tests (create HTML coverage files if in main-branch)
-          ARGS=(
-            -v
-            --cov-report "markdown:${COVERAGE_OUTPUT}"
-            --md-report
-            --md-report-output "$TEST_OUTPUT"
-          )
-          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
-            ARGS+=(--cov-report html)
-          fi
-          uv run pytest "${ARGS[@]}"
-          # Save report file locations in env var
-          echo "COVR_FILE=${COVERAGE_OUTPUT}" >> "$GITHUB_ENV"
-          echo "TEST_FILE=${TEST_OUTPUT}" >> "$GITHUB_ENV"
-
-      - name: Output coverage / test reports to the job summary
-        if: always()
-        shell: bash
-        run: |
-          if [ -f "$TEST_FILE" ]; then
-            {
-              echo "<details><summary>Test Report</summary>"
-              echo ""
-              cat "$TEST_FILE"
-              echo ""
-              echo "</details>"
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ -f "$COVR_FILE" ]; then
-            {
-              echo "<details><summary>Coverage Report</summary>"
-              echo ""
-              cat "$COVR_FILE"
-              echo ""
-              echo "</details>"
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Upload coverage report artifact
-        if: |
-          github.ref == 'refs/heads/main' &&
-          startsWith(matrix.platform, 'ubuntu') &&
-          matrix.python-version == env.PY_VERSION
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: artifact-coverage
-          path: public/
-
-      - name: Get total coverage
-        if: |
-          github.ref == 'refs/heads/main' &&
-          startsWith(matrix.platform, 'ubuntu') &&
-          matrix.python-version == env.PY_VERSION
-        id: set_total
-        shell: bash
-        run: |
-          total=$( uv run python -m coverage report --format=total )
-          echo "total=${total}" >> "$GITHUB_OUTPUT"
-
-      - name: Create coverage badge
-        if: |
-          github.ref == 'refs/heads/main' &&
-          startsWith(matrix.platform, 'ubuntu') &&
-          matrix.python-version == env.PY_VERSION
-        uses: schneegans/dynamic-badges-action@0e50b8bad39e7e1afd3e4e9c2b7dd145fad07501 # v1.8.0
-        with:
-          auth: ${{ secrets.GIST_SECRET }}
-          gistID: d548905d5994ebc1c3f15e8cfb9003e2
-          filename: covbadge.json
-          label: Coverage
-          message: ${{ steps.set_total.outputs.total }}%
-          minColorRange: 60
-          maxColorRange: 95
-          valColorRange: ${{ steps.set_total.outputs.total }}
+    uses: ./.github/workflows/test.yml
+    with:
+      platform: ${{ matrix.platform }}
+      python-version: ${{ matrix.python-version }}
 
   changelog:
-    name: Update changelog of main-branch
-    if: |
-      github.ref == 'refs/heads/main' &&
-      !startsWith(github.event.head_commit.message, 'docs(changelog):')
-    environment:
-      name: changelog
+    name: Changelog
+    needs: test
+    if:
+      ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      !startsWith(github.event.head_commit.message, 'docs(changelog):') }}
     permissions:
       contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create GitHub App Token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
-        id: app-token
-        with:
-          app-id: ${{ vars.CHANGELOG_APP_ID }}
-          private-key: ${{ secrets.CHANGELOG_SECRET }}
+    uses: ./.github/workflows/changelog.yml
 
-      - name: Check out
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-          token: ${{ steps.app-token.outputs.token }}
+  docs:
+    name: Docs
+    needs: changelog
+    if:
+      ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      !startsWith(github.event.head_commit.message, 'docs(changelog):') }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs.yml
 
-      - name: Set Git User
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        shell: bash
-        run: |
-          user_id=$( gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id )
-          git_user_name="${{ steps.app-token.outputs.app-slug }}[bot]"
-          git_user_email="${user_id}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-          git config --local user.name "${git_user_name}"
-          git config --local user.email "${git_user_email}"
-          git config --local pull.rebase true
-          echo "Git name: $(git config --get user.name)"
-          echo "Git email: $(git config --get user.email)"
-
-      - name: Setup uv
-        uses: ./.github/actions/setup-uv
-
-      - name: Create changelog
-        shell: bash
-        run: uv run cz changelog --incremental || [ $? -eq 3 ]
-
-      - name: Commit changelog
-        shell: bash
-        run: |
-          git add CHANGELOG.md
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "docs(changelog): Update CHANGELOG.md"
-            git push
-          fi
+  release:
+    name: Release
+    needs: test
+    if:
+      ${{ github.ref == 'refs/tags/' &&
+      !startsWith(github.event.head_commit.message, 'docs(changelog):') }}
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/release.yml

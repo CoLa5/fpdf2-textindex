@@ -1,0 +1,49 @@
+name: pre-commit
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  pre-commit: # https://github.com/pre-commit/action/blob/main/action.yml
+    name: Pre-Commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup uv
+        uses: ./.github/actions/setup-uv
+
+      - name: Cache pre-commit
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae #v5.0.5
+        with:
+          path: ~/.cache/pre-commit
+          key:
+            pre-commit-3|${{ env.pythonLocation }}|${{
+            hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit
+        id: run
+        env:
+          PRE_COMMIT_OUTPUT: pre_commit_report.md
+        shell: bash
+        run: |
+          uv run --no-sync --with pre-commit-uv pre-commit run --all-files \
+          --color=always --hook-stage=manual --show-diff-on-failure |
+          uv run python scripts/pre_commit_md_report.py \
+          --report "markdown:${PRE_COMMIT_OUTPUT}"
+          echo "pre-commit-report=${PRE_COMMIT_OUTPUT}" >> "$GITHUB_OUTPUT"
+
+      - name: Output pre-commit report to the job summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "${{ steps.run.outputs.pre-commit-report }}" ]; then
+            {
+              echo "<details><summary>Pre-Commit Report</summary>"
+              echo ""
+              cat "${{ steps.run.outputs.pre-commit-report }}"
+              echo ""
+              echo "</details>"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

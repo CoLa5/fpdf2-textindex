@@ -6,8 +6,8 @@ branding:
 inputs:
   docs:
     description: "Enable --group docs flag for uv sync"
-    required: false
     default: false
+    required: false
   python-version:
     description: "Python version to use"
     required: false

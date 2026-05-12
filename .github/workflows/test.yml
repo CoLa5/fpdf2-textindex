@@ -1,0 +1,123 @@
+name: test
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description:
+          "Platform to use (ubuntu-latest, windows-latest, macos-latest)"
+        required: true
+        type: string
+      python-version:
+        description: "Python version to use"
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  test:
+    name: Test
+    runs-on: ${{ inputs.platform }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup uv
+        uses: ./.github/actions/setup-uv
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install qpdf on Ubuntu
+        if: startsWith(inputs.platform, 'ubuntu')
+        shell: bash
+        run: |
+          sudo apt-get update --allow-releaseinfo-change
+          sudo apt-get install qpdf
+          qpdf --version
+
+      - name: Install qpdf on Windows
+        if: startsWith(inputs.platform, 'windows')
+        shell: pwsh
+        run: |
+          choco install qpdf -y
+          qpdf --version
+
+      - name: Run tests
+        id: run
+        env:
+          COVERAGE_OUTPUT: cov_report.md
+          TEST_OUTPUT: test_report.md
+        shell: bash
+        run: |
+          # Ensure there is no `generate=True` left in calls to assert_pdf_equal
+          grep -IRF generate=True test/ && exit 1
+          # Execute all tests (create HTML coverage files if in main-branch)
+          ARGS=(
+            -v
+            --cov-report "markdown:${COVERAGE_OUTPUT}"
+            --md-report
+            --md-report-output "$TEST_OUTPUT"
+          )
+          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            ARGS+=(--cov-report html)
+          fi
+          uv run pytest "${ARGS[@]}"
+          # Save report file locations in env var
+          echo "cov-report=${COVERAGE_OUTPUT}" >> "$GITHUB_OUTPUT"
+          echo "test-report=${TEST_OUTPUT}" >> "$GITHUB_OUTPUT"
+
+      - name: Output coverage / test reports to the job summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "${{ steps.run.outputs.test-report }}" ]; then
+            {
+              echo "<details><summary>Test Report</summary>"
+              echo ""
+              cat "${{ steps.run.outputs.test-report }}"
+              echo ""
+              echo "</details>"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f "${{ steps.run.outputs.cov-report }}" ]; then
+            {
+              echo "<details><summary>Coverage Report</summary>"
+              echo ""
+              cat "${{ steps.run.outputs.cov-report }}"
+              echo ""
+              echo "</details>"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload coverage report artifact
+        if: |
+          github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          startsWith(inputs.platform, 'ubuntu') && inputs.python-version == env.PY_VERSION
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: artifact-coverage
+          path: public/
+
+      - name: Get total coverage
+        if: |
+          github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          startsWith(inputs.platform, 'ubuntu') && inputs.python-version == env.PY_VERSION
+        id: set_total
+        shell: bash
+        run: |
+          total=$( uv run python -m coverage report --format=total )
+          echo "total=${total}" >> "$GITHUB_OUTPUT"
+
+      - name: Create coverage badge
+        if: |
+          github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          startsWith(inputs.platform, 'ubuntu') && inputs.python-version == env.PY_VERSION
+        uses: schneegans/dynamic-badges-action@0e50b8bad39e7e1afd3e4e9c2b7dd145fad07501 # v1.8.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: d548905d5994ebc1c3f15e8cfb9003e2
+          filename: covbadge.json
+          label: Coverage
+          message: ${{ steps.set_total.outputs.total }}%
+          minColorRange: 60
+          maxColorRange: 95
+          valColorRange: ${{ steps.set_total.outputs.total }}

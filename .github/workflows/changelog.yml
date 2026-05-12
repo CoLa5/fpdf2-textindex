@@ -1,0 +1,58 @@
+name: changelog
+on:
+  workflow_call:
+permissions:
+  contents: write
+jobs:
+  changelog:
+    name: Changelog
+    environment:
+      name: github-app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_SECRET }}
+
+      - name: Check out
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set Git User
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        shell: bash
+        run: |
+          user_id=$( gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id )
+          git_user_name="${{ steps.app-token.outputs.app-slug }}[bot]"
+          git_user_email="${user_id}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+          git config --local user.name "${git_user_name}"
+          git config --local user.email "${git_user_email}"
+          git config --local pull.rebase true
+          echo "Git name: $(git config --get user.name)"
+          echo "Git email: $(git config --get user.email)"
+
+      - name: Setup uv
+        uses: ./.github/actions/setup-uv
+
+      - name: Create changelog
+        shell: bash
+        run: uv run cz changelog --incremental || [ $? -eq 3 ]
+
+      - name: Commit changelog
+        shell: bash
+        run: |
+          git add CHANGELOG.md
+          if git diff --cached --quiet; then
+            echo "## No Change of Changelog" >> "$GITHUB_STEP_SUMMARY"
+          else
+            git commit -m "docs(changelog): Update CHANGELOG.md"
+            git push
+            echo "## Update of Changelog" >> "$GITHUB_STEP_SUMMARY"
+          fi

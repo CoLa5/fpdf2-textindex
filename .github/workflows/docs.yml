@@ -1,18 +1,13 @@
 name: docs
-
 on:
-  workflow_run:
-    workflows: ["ci"]
-    types: [completed]
-
+  workflow_call:
 permissions:
-  actions: read
   contents: read
-
+  pages: write
+  id-token: write
 jobs:
   docs:
     name: Build Docs
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Check out
@@ -37,10 +32,7 @@ jobs:
 
   example:
     name: Example PDF
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Check out
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -64,27 +56,14 @@ jobs:
   pages-collect:
     name: Collect Docs
     needs: [docs, example]
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Download coverage artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: artifact-coverage/
-          pattern: artifact-coverage
-          run-id: ${{ github.event.workflow_run.id }}
-
-      - name: Download docs and example artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: public/
           pattern: artifact-*
           merge-multiple: true
-
-      - name: Merge artifacts
-        shell: bash
-        run: cp -r artifact-coverage public
 
       - name: Upload public-directory
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
@@ -94,7 +73,6 @@ jobs:
   pages-deploy:
     name: Deploy Docs
     needs: pages-collect
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       pages: write
