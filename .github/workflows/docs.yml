@@ -2,6 +2,7 @@ name: docs
 on:
   workflow_call:
 permissions:
+  actions: read
   contents: read
   pages: write
   id-token: write
@@ -56,6 +57,8 @@ jobs:
   pages-collect:
     name: Collect Docs
     needs: [docs, example]
+    permissions:
+      actions: read
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
