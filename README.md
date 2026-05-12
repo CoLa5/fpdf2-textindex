@@ -11,8 +11,9 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v1.json)](https://github.com/charliermarsh/ruff)
 [![Checks: flake-8, isort, mypy](https://img.shields.io/badge/Checks-flake--8,_isort,_mypy-green.svg)](https://github.com/CoLa5/fpdf2-textindex/blob/main/.pyproject.toml)
 
+[![Commitizen](https://img.shields.io/badge/Commitizen-enabled-9b1fe8.svg)](https://commitizen-tools.github.io/commitizen/)
+[![Conventional Commits](https://img.shields.io/badge/Conventional_Commits-v1.0.0-yellow.svg)](https://www.conventionalcommits.org/en/v1.0.0/)
 [![Keep a Changelog](https://img.shields.io/badge/Keep_a_Changelog-v1.1.0-orange.svg)](https://keepachangelog.com/en/1.1.0/)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-v1.0.0-yellow.svg)](https://www.conventionalcommits.org/en/v1.0.0/)
 [![GitHub last commit](https://img.shields.io/github/last-commit/CoLa5/fpdf2-textindex)](https://github.com/CoLa5/fpdf2-textindex/commits/main)
 
 # fpdf2 Text Index
@@ -47,9 +48,8 @@ The text index will have a single entry:
 Use the [text index-syntax](https://mattgemmell.scot/textindex/) to define index
 directives in a text:
 
-> Most mechanical keyboard firmware{^} supports the use of [key > > > > > > > >
->
-> > combinations]{^}.
+> Most mechanical keyboard firmware{^} supports the use of [key
+> combinations]{^}.
 
 Print it in the PDF by enabling markdown in `fpdf2.FPDF.cell` or
 `fpdf2.FPDF.multi_cell`:
@@ -112,12 +112,13 @@ Parameters:
   created at the end of the document and then reordered when the final PDF is
   produced.
 
-> [!NOTE] Enabling `allow_extra_pages` may affect page numbering for headers or
-> footers. Since extra text index pages are added after the document content,
-> they might cause page numbers to appear out of sequence. To maintain
-> consistent numbering, use **Page Labels** to assign a specific numbering style
-> to the index pages. When using Page Labels, any extra text index pages will
-> follow the numbering style of the first text index page
+> [!NOTE]  
+> Enabling `allow_extra_pages` may affect page numbering for headers or footers.
+> Since extra text index pages are added after the document content, they might
+> cause page numbers to appear out of sequence. To maintain consistent
+> numbering, use **Page Labels** to assign a specific numbering style to the
+> index pages. When using Page Labels, any extra text index pages will follow
+> the numbering style of the first text index page
 
 ## Text Index Directive Syntax
 
