@@ -36,7 +36,8 @@ jobs:
     needs: test
     if:
       ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-      !startsWith(github.event.head_commit.message, 'docs(changelog):') }}
+      (!startsWith(github.event.head_commit.message, 'bump:') ||
+      !startsWith(github.event.head_commit.message, 'docs(changelog):')) }}
     permissions:
       contents: write
     uses: ./.github/workflows/changelog.yml
@@ -61,9 +62,7 @@ jobs:
   release:
     name: Release
     needs: test
-    if:
-      ${{ github.ref == 'refs/tags/' &&
-      !startsWith(github.event.head_commit.message, 'docs(changelog):') }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
     permissions:
       contents: write
       id-token: write
