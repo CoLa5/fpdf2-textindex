@@ -45,7 +45,6 @@ jobs:
           git config --local user.name "${git_user_name}"
           git config --local user.email "${git_user_email}"
           git config --local pull.rebase true
-          gh auth setup-git
           echo "Git name: $(git config --get user.name)"
           echo "Git email: $(git config --get user.email)"
 
