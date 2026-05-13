@@ -5,7 +5,7 @@ from collections.abc import Iterable, Iterator
 import contextlib
 import dataclasses
 import logging
-from typing import Literal, Protocol, TYPE_CHECKING
+from typing import Literal, TYPE_CHECKING
 
 import fpdf
 
@@ -14,28 +14,10 @@ from fpdf2_textindex.constants import LOGGER
 from fpdf2_textindex.interface import CrossReferenceType
 from fpdf2_textindex.interface import LinkLocation
 from fpdf2_textindex.interface import TextIndexEntry
+from fpdf2_textindex.interface import TextIndexEntryP
 from fpdf2_textindex.md_emphasis import MDEmphasis
 from fpdf2_textindex.pdf import FPDF
 from fpdf2_textindex.utils import md_link
-
-
-class TextIndexEntryP(Protocol):
-    """Text Index Protocol."""
-
-    @property
-    def depth(self) -> int:
-        """The depth of the entry."""
-        ...
-
-    @property
-    def label(self) -> str | None:
-        """The label of the entry."""
-        ...
-
-    @property
-    def sort_label(self) -> str:
-        """The sort label of the entry."""
-        ...
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True, slots=True)
@@ -56,7 +38,8 @@ class _AlsoPseudoEntry:
 class TextIndexRenderer:
     """Text Index (Writer).
 
-    A reference implementation of a Text Index to use with [fpdf2](https://py-pdf.github.io/fpdf2/index.html).
+    A reference implementation of a Text Index to use with
+    [fpdf2](https://py-pdf.github.io/fpdf2/index.html).
 
     This class provides a customizable Text Index that can be used directly or
     subclassed for additional functionality.
@@ -283,7 +266,8 @@ class TextIndexRenderer:
         if not self.show_header or entry.depth > 1:
             return
 
-        if entry.sort_label == "\uffff":  # Empty label and sort key
+        # Empty label and sort key
+        if entry.sort_label == const._LAST_SORT_LABEL:
             return
 
         next_header = entry.sort_label[0].upper()
@@ -456,7 +440,7 @@ class TextIndexRenderer:
         if running_in and not _run_in:
             return
 
-        has_refs = len(entry.references) > 0
+        has_refs = bool(entry.references)
         has_see_refs = any(
             cr.type == CrossReferenceType.SEE for cr in entry.cross_references
         )
@@ -505,7 +489,7 @@ class TextIndexRenderer:
                 separator = const.PATH_SEPARATOR
             text_pts.append(separator)
 
-            for i, child in enumerate(entry.children):
+            for i, child in enumerate(entry.sorted_children):
                 if i > 0:
                     text_pts.append(const.LIST_SEPARATOR)
                 text_pts.extend(
@@ -540,7 +524,7 @@ class TextIndexRenderer:
         yield entry, text
 
         if not run_in_children:
-            for child in entry.children:
+            for child in entry.sorted_children:
                 yield from self._prepare_entry(
                     pdf, child, max_depth, _run_in=False
                 )
@@ -577,9 +561,6 @@ class TextIndexRenderer:
         cross_ref_type: CrossReferenceType,
         mode: Literal["entry", "running_in", "sub_entry"],
     ) -> Iterator[str]:
-        # Sort by type and label path
-        entry.cross_references.sort(key=lambda cr: (cr.type, *cr.label_path))
-
         # See (also) under
         under_mode = (
             len(entry.cross_references) == 1

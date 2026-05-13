@@ -11,14 +11,14 @@ from fpdf2_textindex.alias import AliasRegistry
 from fpdf2_textindex.constants import LOGGER
 from fpdf2_textindex.interface import Alias
 from fpdf2_textindex.interface import CrossReferenceType
+from fpdf2_textindex.interface import LabelPath
+from fpdf2_textindex.interface import LabelPathT
 from fpdf2_textindex.interface import LinkLocation
 from fpdf2_textindex.interface import TextIndexEntry
 from fpdf2_textindex.md_emphasis import MDEmphasis
 from fpdf2_textindex.utils import insert_at_match
-from fpdf2_textindex.utils import join_label_path
 from fpdf2_textindex.utils import remove_match_from_str
 from fpdf2_textindex.utils import remove_quotes
-from fpdf2_textindex.utils import split_label_path
 
 
 class TextIndexParser:
@@ -107,7 +107,7 @@ class TextIndexParser:
 
     def entry_at_label_path(
         self,
-        label_path: Iterable[str],
+        label_path: LabelPathT,
         *,
         create: bool = False,
     ) -> tuple[TextIndexEntry | None, bool]:
@@ -126,7 +126,7 @@ class TextIndexParser:
         """
         created = False
         node = self._root
-        for label in label_path:
+        for label in LabelPath(label_path):
             child = node.get_child(label)
             if child is None:
                 if not create:
@@ -158,7 +158,10 @@ class TextIndexParser:
                 If `strict=True` and and adding a SEE-cross reference to an
                 entry with a former "normal" reference (locator) or viceversa.
         """  # noqa: DOC502
-        LOGGER.info("Parsing text by index parser")
+        LOGGER.info(
+            "Parsing text %r",
+            text if len(text) < 45 else text[:20] + "..." + text[-20:],
+        )
 
         former_len = len(self)
         offset = 0  # Account for replacements
@@ -218,7 +221,7 @@ class TextIndexParser:
 
             params, suffix = self._parse_suffix(params)
             params, sort_key = self._parse_sort_key(params, content)
-            params, create_ref, cross_references = self._parse_cross_ref(
+            params, create_ref, cref_type_label_path = self._parse_cross_ref(
                 params, label_path, label, content
             )
             if params.strip():
@@ -231,7 +234,7 @@ class TextIndexParser:
                 label_path,
                 label,
                 create_ref,
-                cross_references,
+                cref_type_label_path,
                 closing,
                 directive.group(0),
                 locator_emphasis,
@@ -266,13 +269,13 @@ class TextIndexParser:
         label_path: Iterable[str],
         label: str,
         content: str,
-    ) -> tuple[str, bool, list[tuple[CrossReferenceType, list[str]]]]:
+    ) -> tuple[str, bool, list[tuple[CrossReferenceType, LabelPath]]]:
         create_ref = True
-        cross_references: list[tuple[CrossReferenceType, list[str]]] = []
+        cref_type_label_path: list[tuple[CrossReferenceType, LabelPath]] = []
         params = params.strip()
         cross_match = self._CROSS_REF_IN_PARAMS_PATTERN.match(params)
         if cross_match is None:
-            return params, create_ref, cross_references
+            return params, create_ref, cref_type_label_path
 
         refs_string = cross_match.group(1).strip()
 
@@ -303,7 +306,7 @@ class TextIndexParser:
                 create_ref = False
 
             # Split reference label path
-            ref_label_path = split_label_path(ref)
+            ref_label_path = LabelPath.split_str(ref)
 
             # Cross reference in different entry, referencing this mark's entry
             if inbound:
@@ -313,7 +316,7 @@ class TextIndexParser:
                 if TYPE_CHECKING:
                     assert isinstance(source_entry, TextIndexEntry)
                 LOGGER.debug(
-                    "\tCreating inbound %s cross reference from entry %r (%s)",
+                    "\tCreating inbound %s cross reference from entry %s (%s)",
                     ref_type.upper(),
                     ref_label_path[-1],
                     f"Path: {source_entry.joined_label_path!r:s}"
@@ -323,18 +326,18 @@ class TextIndexParser:
                 source_entry.add_cross_reference(
                     self._directive_id,
                     ref_type,
-                    [*label_path, label],
+                    LabelPath((*label_path, label)),
                     strict=self._strict,
                 )
 
             # Cross reference within this mark's entry
             else:
-                cross_references.append((ref_type, ref_label_path))
+                cref_type_label_path.append((ref_type, ref_label_path))
 
         params = remove_match_from_str(params, cross_match)
-        if len(cross_references) > 0:
-            LOGGER.debug("\tCross references: %r", cross_references)
-        return params, create_ref, cross_references
+        if len(cref_type_label_path) > 0:
+            LOGGER.debug("\tCross references: %r", cref_type_label_path)
+        return params, create_ref, cref_type_label_path
 
     def _parse_final_marker(self, params: str) -> tuple[str, bool, bool]:
         params = params.strip()
@@ -391,11 +394,10 @@ class TextIndexParser:
         label: str | None,
         content: str,
         directive_str: str,
-    ) -> tuple[str, list[str], str | None, bool]:
-        label_path: list[str] = []
+    ) -> tuple[str, LabelPath, str | None, bool]:
         label_path_match = self._LABEL_PATH_IN_PARAMS_PATTERN.match(params)
         if not label_path_match:
-            return params, label_path, label, False
+            return params, LabelPath(), label, False
 
         label_path_str = label_path_match.group(0).strip()
 
@@ -412,16 +414,17 @@ class TextIndexParser:
         )
 
         # Split label path
-        label_path = split_label_path(label_path_str)
+        label_path = LabelPath.split_str(label_path_str)
 
         # Last item is now the label
         if label_path[-1] not in {"", const.PATH_DELIMITER}:
-            label = label_path.pop()
+            label = label_path[-1]
+            label_path = label_path[:-1]
         assert isinstance(label, str)
 
         # Remove empty last label
         if label_path and label_path[-1] == "":
-            label_path.pop()
+            label_path = label_path[:-1]
 
         # Assert label
         if label is None:
@@ -550,7 +553,7 @@ class TextIndexParser:
         label_path: Iterable[str],
         label: str,
         create_ref: bool,
-        cross_references: list[tuple[CrossReferenceType, list[str]]],
+        cref_type_label_path: list[tuple[CrossReferenceType, LabelPath]],
         closing: bool,
         directive: str,
         locator_emphasis: bool,
@@ -558,13 +561,13 @@ class TextIndexParser:
         suffix: str | None,
     ) -> bool:
         entry, existed = self.entry_at_label_path(
-            [*label_path, label],
+            LabelPath((*label_path, label)),
             create=not closing,
         )
         if not entry and closing:
             LOGGER.warning(
                 "Attempted to close a non-existent entry %r; ignoring: %r",
-                join_label_path([*label_path, label]),
+                LabelPath((*label_path, label)).join(),
                 directive,
             )
             return False
@@ -626,13 +629,13 @@ class TextIndexParser:
                 )
             entry.sort_key = sort_key
 
-        if len(cross_references) > 0:
+        if len(cref_type_label_path) > 0:
             if existed:
                 LOGGER.debug(
                     "\tAdding cross references to existing entry %r",
                     entry.joined_label_path,
                 )
-            for ref_type, ref_label_path in cross_references:
+            for ref_type, ref_label_path in cref_type_label_path:
                 entry.add_cross_reference(
                     self._directive_id,
                     ref_type,

@@ -1,12 +1,14 @@
 """Alias Registry."""
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterator, Mapping
 import logging
 import re
 from typing import Final, Literal
 
 from fpdf2_textindex.constants import LOGGER
 from fpdf2_textindex.interface import Alias
+from fpdf2_textindex.interface import LabelPath
+from fpdf2_textindex.interface import LabelPathT
 
 
 class AliasRegistry(Mapping[str, Alias]):
@@ -38,7 +40,7 @@ class AliasRegistry(Mapping[str, Alias]):
     def __repr__(self) -> str:
         return f"{type(self).__name__:s}({len(self):d} aliases)"
 
-    def define(self, name: str, label_path: Iterable[str]) -> None:
+    def define(self, name: str, label_path: LabelPathT) -> None:
         """Defines an alias.
 
         Args:
@@ -48,7 +50,7 @@ class AliasRegistry(Mapping[str, Alias]):
         Raises:
             ValueError: If the label path is empty.
         """
-        label_path = tuple(label_path)
+        label_path = LabelPath(label_path)
         if len(label_path) == 0:
             msg = f"cannot create alias {name!r:s} with empty label path"
             raise ValueError(msg)
@@ -72,13 +74,13 @@ class AliasRegistry(Mapping[str, Alias]):
 
     def define_or_replace_from_label_path(
         self,
-        label_path: list[str],
+        label_path: LabelPathT,
         label: str | None,
         content: str,
         alias_name: str | None,
         alias_start: int,
         directive_str: str,
-    ) -> tuple[list[str], str | None, bool]:
+    ) -> tuple[LabelPath, str | None, bool]:
         """Defines an alias from a label path and label or replaces an alias in
         it.
 
@@ -95,6 +97,7 @@ class AliasRegistry(Mapping[str, Alias]):
             alias. The label path and the label can differ from the input in
             case the alias existed before.
         """
+        label_path = LabelPath(label_path)
         unreferenced_alias = False
         if alias_name is None:
             return label_path, label, unreferenced_alias
@@ -104,10 +107,9 @@ class AliasRegistry(Mapping[str, Alias]):
             alias_name = alias_name.lstrip(self._ALIAS_PREFIX)
 
         # Alias definition at end of an internally-specified label.
-        # Trim alias portion from label, and define
         if alias_start > 0:
             assert label is not None
-            self.define(alias_name, [*label_path, label])
+            self.define(alias_name, LabelPath((*label_path, label)))
 
         # Alias found at start of label:
         # Either an alias reference, or a definition without an internal label
@@ -120,9 +122,10 @@ class AliasRegistry(Mapping[str, Alias]):
             if alias_name in self._aliases:
                 # Valid alias reference, load alias
                 alias = self._aliases[alias_name]
-                label_path = list(alias.label_path)
+                label_path = alias.label_path
                 assert label is None
-                label = label_path.pop()
+                label = label_path[-1]
+                label_path = label_path[:-1]
                 LOGGER.info(
                     "\tLoaded alias %r as %r for directive: %r",
                     alias_name,
@@ -133,7 +136,7 @@ class AliasRegistry(Mapping[str, Alias]):
             # alias, define a new alias instead
             elif content:
                 label = content
-                self.define(alias_name, [label])
+                self.define(alias_name, LabelPath(label))
             else:
                 LOGGER.warning(
                     "Cannot load nor define alias %r for directive: %r",
@@ -148,7 +151,7 @@ class AliasRegistry(Mapping[str, Alias]):
                 # We already had a label from either a bracketed span, or
                 # implicitly, define alias
                 label = content
-                self.define(alias_name, [*label_path, label])
+                self.define(alias_name, LabelPath((*label_path, label)))
             else:
                 # No label specified either internally or previously;
                 # can't define an alias.

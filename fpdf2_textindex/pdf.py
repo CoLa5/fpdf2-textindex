@@ -1,7 +1,7 @@
 """FPDF-Support for Text Index."""
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Sequence
 import os
 import pathlib
 from typing import BinaryIO, Literal, NamedTuple, TYPE_CHECKING, overload
@@ -38,6 +38,7 @@ from fpdf.util import builtin_srgb2014_bytes
 
 from fpdf2_textindex import constants as const
 from fpdf2_textindex.concordance import ConcordanceList
+from fpdf2_textindex.interface import LabelPathT
 from fpdf2_textindex.interface import LinkLocation
 from fpdf2_textindex.interface import TextIndexEntry
 from fpdf2_textindex.parser import TextIndexParser
@@ -315,7 +316,7 @@ class FPDF(fpdf.FPDF):
 
     def add_index_entry(
         self,
-        label_path: Iterable[str],
+        label_path: LabelPathT,
         sort_key: str | None = None,
     ) -> TextIndexEntry:
         """Adds manually a text index entry.
@@ -337,7 +338,7 @@ class FPDF(fpdf.FPDF):
 
     def index_entry_at_label_path(
         self,
-        label_path: Iterable[str],
+        label_path: LabelPathT,
     ) -> TextIndexEntry | None:
         """Returns a text index entry by its label path.
 

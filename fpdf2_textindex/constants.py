@@ -5,6 +5,7 @@ from typing import Final, Literal
 
 LOGGER: logging.Logger = logging.getLogger(__name__.rsplit(".", maxsplit=1)[0])
 
+
 # ID prefix/suffix
 ENTRY_ID_PREFIX: Final[Literal["ent"]] = "ent"
 INDEX_ID_PREFIX: Final[Literal["idx"]] = "idx"
@@ -39,3 +40,6 @@ PATH_SEPARATOR: Final[Literal[": "]] = ": "
 
 RANGE_SEPARATOR: Final[Literal["–"]] = "–"  # noqa: RUF001
 """Range separator."""
+
+# Last sort label
+_LAST_SORT_LABEL: Final[Literal["\uffff"]] = "\uffff"
