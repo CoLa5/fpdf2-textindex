@@ -43,6 +43,12 @@ The text index will have a single entry:
 
 - example, 1
 
+> [!NOTE]  
+> The reference index implementation
+> `fpdf2_textindex.TextIndexRenderer.render_text_index` renders each index entry
+> according to
+> [The Chicago Manual of Style - Indexes](https://www.chicagomanualofstyle.org/book/ed18/part3/ch15/toc.html).
+
 ## Installation
 
 **Using pip:**
@@ -146,7 +152,7 @@ Parameters:
 
 ```text
 __example__{^foo>"\* text"#demo |bar;+baz>fiz [whiz] ~z !}
-           1            2     3             4      5  6
+             1            2     3             4      5  6
 ```
 
 The index directive in the example will:
@@ -174,10 +180,15 @@ The resulting index with page numbers would look like:
   - example text, **6** (_see_ bar). _See also_ baz: fiz
 
 if index directives with page references (locators) for `"bar"` and `"baz"` >
-`"fiz"` have been added as well.  
+`"fiz"` have been added as well.
+
 In a real index, this would provoke an error, because either you set a reference
 locator to a PDF page and a **SEE ALSO**-cross reference or a **SEE**- and a
-**SEE ALSO**-cross reference, but not all three at the same time.
+**SEE ALSO**-cross reference, but not all three at the same time.  
+Alternatively, you can deactivate strict-mode by setting
+`FPDF.STRICT_INDEX_MODE = False` which would automatically convert the
+**SEE**-cross reference into a **SEE ALSO**-cross reference, accompanied by a
+warning.
 
 ## Example
 
@@ -221,18 +232,23 @@ Finally, a `render_index_function` similar to the
 is used to render the index. The package supports a reference implementation,
 but the user can implement its own version if necessary.
 
-The reference `render_index_function` renders each index entry according to
-[The Chicago Manual of Style - Indexes](https://www.chicagomanualofstyle.org/book/ed18/part3/ch15/toc.html):
+The reference index implementation
+`fpdf2_textindex.TextIndexRenderer.render_text_index` would render the example
+as
 
 `"example, 3"`
+
+in the text index (assuming it has been written on page 3 in the PDF).
 
 The unset link annotation in the text is pointed to this entry in the index and,
 thus, is finally set.
 
-In the reference implementation, inverted links are added as well: To create a
-connection of the index entry to the text page, the printed page number will
-point to the text page.  
+In the reference index implementation, inverted links are added as well:  
+To create a connection of the index entry to the text page, the printed page
+number will point to the text page, where the text index directive has been
+set.  
 So clicking on `"example"` on the text page will lead to corresponding entry in
 the text index. Clicking on the reference (locator) in the text index, page
-`"3"`, will return the reader to the text page. Cross-references are connected
-in the same way but inside of the text index.
+`"3"`, will return the reader to the text page.  
+Cross-references are interconnected in the same way but inside of the text
+index.

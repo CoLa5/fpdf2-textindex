@@ -71,7 +71,8 @@ class FPDF(fpdf.FPDF):
     STRICT_INDEX_MODE: bool = True
     """If `True` and an entry has a normal reference (locator) and a SEE-cross
     reference, a `FPDF2TextindexError` will be raised. Else, it will just be a
-    warning. Defaults to `True`.
+    warning and the SEE-cross reference will be automatically converted into a
+    SEE ALSO-cross reference. Defaults to `True`.
     """
 
     def __init__(
