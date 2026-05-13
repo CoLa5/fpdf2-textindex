@@ -142,7 +142,7 @@ class ConcordanceList(Sequence[tuple[str, str]]):
         Returns:
             The parsed text.
         """
-        LOGGER.info("Parsing text by concordance list")
+        LOGGER.debug("Parsing text by concordance list")
         excluded_ranges = self._exclude_ranges(text)
         term_matches = self._match_terms(text, excluded_ranges)
 
@@ -153,7 +153,7 @@ class ConcordanceList(Sequence[tuple[str, str]]):
             text = insert_at_match(text, term, mark, offset=offset)
             offset += len(mark) - len(term.group(0))
 
-        LOGGER.info(
+        LOGGER.debug(
             "Parsed text by concordance list: %d rules generated %d index "
             "marks",
             len(self._concordance),
@@ -186,7 +186,7 @@ class ConcordanceList(Sequence[tuple[str, str]]):
             # intersect excluded ranges
             new_exclusions = []
             last_checked = 0
-            LOGGER.info("Matching pattern %r on text", pattern)
+            LOGGER.debug("Matching pattern %r on text", pattern)
             for term in re.finditer(pattern, text):
                 # Check this is not an excluded range.
                 is_excluded = False
