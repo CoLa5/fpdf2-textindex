@@ -11,6 +11,20 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
 ## [Unreleased]
 
+### Added
+
+- Add proper error class `FPDF2TextindexError`
+- Make interface a proper submodule and make children and cross-references always sorted when inserting
+
+### Changed
+
+- Improve comment
+
+### Fixed
+
+- Fix double printing of SEE ALSO references [#3](https://github.com/CoLa5/fpdf2-textindex/issues/3)
+- Fix log level in concordance to debug to make it less noisy
+
 ## [0.1.0] - 2026-05-12
 
 ### Added
