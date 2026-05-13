@@ -204,7 +204,7 @@ def main() -> None:
             new_y=fpdf.YPos.NEXT,
         )
 
-    # Print
+    # Print with fixed creation date
     doc.creation_date = dt.datetime(1969, 12, 31, 19, 00, 00).replace(
         tzinfo=dt.timezone.utc
     )
