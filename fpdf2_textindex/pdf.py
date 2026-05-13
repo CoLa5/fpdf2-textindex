@@ -38,6 +38,7 @@ from fpdf.util import builtin_srgb2014_bytes
 
 from fpdf2_textindex import constants as const
 from fpdf2_textindex.concordance import ConcordanceList
+from fpdf2_textindex.errors import FPDF2TextindexError
 from fpdf2_textindex.interface import LabelPathT
 from fpdf2_textindex.interface import LinkLocation
 from fpdf2_textindex.interface import TextIndexEntry
@@ -69,8 +70,8 @@ class FPDF(fpdf.FPDF):
 
     STRICT_INDEX_MODE: bool = True
     """If `True` and an entry has a normal reference (locator) and a SEE-cross
-    reference, a `ValueError` will be raised. Else, it will just be a warning.
-    Defaults to `True`.
+    reference, a `FPDF2TextindexError` will be raised. Else, it will just be a
+    warning. Defaults to `True`.
     """
 
     def __init__(
@@ -202,7 +203,7 @@ class FPDF(fpdf.FPDF):
                 f"breaks: ToC ended on page {self.page:d} while it was "
                 f"expected to span exactly {indexp.pages:d} pages"
             )
-            raise FPDFException(error_msg)
+            raise FPDF2TextindexError(error_msg)
         if self._toc_inserted_pages:
             # Generating final page footer after more pages were inserted:
             self._render_footer()
@@ -384,7 +385,8 @@ class FPDF(fpdf.FPDF):
                 Text Index. Defaults to `True`.
 
         Raises:
-            FPDFException: If an index placeholder has been inserted before.
+            FPDF2TextindexError: If an index placeholder has been inserted
+                before.
             TypeError: If `render_index_function` is not callable.
             ValueError: If ``pages`` is less than `1`.
         """
@@ -404,7 +406,7 @@ class FPDF(fpdf.FPDF):
                 "A placeholder for the index has already been defined on page "
                 f"{self.index_placeholder.start_page}"
             )
-            raise FPDFException(msg)
+            raise FPDF2TextindexError(msg)
         self.index_placeholder = IndexPlaceholder(
             render_index_function,
             self.page,

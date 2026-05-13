@@ -98,7 +98,8 @@ class Node(_LabelPathABC):
             child: The child to add.
 
         Raises:
-            ValueError: If there is already a child with the same label.
+            ValueError: If there is already a child with the same label or the
+                child's parent differs from this node.
         """
         if self.depth >= 3:
             LOGGER.warning(

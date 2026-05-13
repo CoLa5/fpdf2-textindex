@@ -8,6 +8,7 @@ from typing import Protocol, runtime_checkable
 
 from fpdf2_textindex import constants as const
 from fpdf2_textindex.constants import LOGGER
+from fpdf2_textindex.errors import FPDF2TextindexError
 from fpdf2_textindex.interface.cross_reference import CrossReference
 from fpdf2_textindex.interface.enums import CrossReferenceType
 from fpdf2_textindex.interface.label_path import LabelPathT
@@ -95,14 +96,15 @@ class TextIndexEntry(Node):
             id: The id of the cross reference.
             cross_ref_type: The type of the cross reference.
             label_path: The label path of the cross reference.
-            strict: Whether to raise a `ValueError` if adding a SEE-cross
-                reference to an entry with former "normal" reference (locator).
-                Else, it will just be a warning and the SEE-cross reference will
-                be automatically converted to SEE ALSO. Defaults to `True`.
+            strict: Whether to raise a `FPDF2TextindexError` if adding a
+                SEE-cross reference to an entry with former "normal" reference
+                (locator). Else, it will just be a warning and the SEE-cross
+                reference will be automatically converted to SEE ALSO. Defaults
+                to `True`.
 
         Raises:
-            ValueError: If `strict=True` and adding a SEE-cross reference to
-                an entry with former "normal" reference (locator).
+            FPDF2TextindexError: If `strict=True` and adding a SEE-cross
+                reference to an entry with former "normal" reference (locator).
         """
         cref = CrossReference(id=id, type=cross_ref_type, label_path=label_path)  # type: ignore[arg-type]
         if self._references and cref.type == CrossReferenceType.SEE:
@@ -112,7 +114,7 @@ class TextIndexEntry(Node):
                     f"{self.joined_label_path!r} with former reference "
                     f"(locator)"
                 )
-                raise ValueError(msg)
+                raise FPDF2TextindexError(msg)
             LOGGER.warning(
                 "Adding a SEE-cross reference to entry %r with former "
                 "reference (locator); cross reference will be converted to SEE "
@@ -142,14 +144,15 @@ class TextIndexEntry(Node):
                 Defaults to `False`.
             start_suffix: The start suffix of the reference. Defaults to
                 `None`.
-            strict: Whether to raise a `ValueError` if adding a SEE-cross
-                reference to an entry with former "normal" reference (locator).
-                Else, it will just be a warning and the SEE-cross reference will
-                be automatically converted to SEE ALSO. Defaults to `True`.
+            strict: Whether to raise a `FPDF2TextindexError` if adding a
+                SEE-cross reference to an entry with former "normal" reference
+                (locator). Else, it will just be a warning and the SEE-cross
+                reference will be automatically converted to SEE ALSO. Defaults
+                to `True`.
 
         Raises:
-            ValueError: If `strict=True` and adding a reference locator to an
-                entry with former SEE-cross reference.
+            FPDF2TextindexError: If `strict=True` and adding a reference locator
+                to an entry with former SEE-cross reference.
         """
         ref = Reference(
             start_id=start_id,
@@ -166,7 +169,7 @@ class TextIndexEntry(Node):
                     f"{self.joined_label_path!r} with former SEE-cross "
                     f"reference"
                 )
-                raise ValueError(msg)
+                raise FPDF2TextindexError(msg)
             LOGGER.warning(
                 "Adding a reference (locator) to entry %r with former SEE-"
                 "cross reference(s); cross reference(s) will be converted to "
@@ -196,10 +199,10 @@ class TextIndexEntry(Node):
                 `None`.
 
         Raises:
-            RuntimeError: If there has been no reference before.
+            FPDF2TextindexError: If there has been no reference started before.
         """
         if len(self._references) == 0:
             msg = "cannot update latest reference end without reference"
-            raise RuntimeError(msg)
+            raise FPDF2TextindexError(msg)
         self._references[-1].end_id = end_id
         self._references[-1].end_suffix = end_suffix

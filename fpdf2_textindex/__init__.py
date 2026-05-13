@@ -14,6 +14,7 @@ The module gives direct access to some classes defined in submodules:
 * :py:class:`fpdf2_textindex.CrossReference`
 * :py:class:`fpdf2_textindex.CrossReferenceType`
 * :py:class:`fpdf2_textindex.FPDF`
+* :py:class:`fpdf2_textindex.FPDF2TextindexError`
 * :py:class:`fpdf2_textindex.LinkLocation`
 * :py:class:`fpdf2_textindex.Reference`
 * :py:class:`fpdf2_textindex.TextIndexEntry`
@@ -22,6 +23,7 @@ The module gives direct access to some classes defined in submodules:
 
 # Monkey-patch fpdf bugs first
 import fpdf2_textindex._fpdf  # noqa: F401
+from fpdf2_textindex.errors import FPDF2TextindexError
 from fpdf2_textindex.interface import Alias
 from fpdf2_textindex.interface import CrossReference
 from fpdf2_textindex.interface import CrossReferenceType
@@ -41,6 +43,7 @@ __all__ = (  # noqa: RUF022
     "CrossReference",
     "CrossReferenceType",
     "FPDF",
+    "FPDF2TextindexError",
     "LinkLocation",
     "Reference",
     "TextIndexEntry",

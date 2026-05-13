@@ -11,6 +11,7 @@ import fpdf
 
 from fpdf2_textindex import constants as const
 from fpdf2_textindex.constants import LOGGER
+from fpdf2_textindex.errors import FPDF2TextindexError
 from fpdf2_textindex.interface import CrossReferenceType
 from fpdf2_textindex.interface import LinkLocation
 from fpdf2_textindex.interface import TextIndexEntry
@@ -153,7 +154,8 @@ class TextIndexRenderer:
             entries: The list of entries to render.
 
         Raises:
-            ValueError: If a textstyle has a [fpdf.Align](https://py-pdf.github.io/fpdf2/fpdf/enums.html#fpdf.enums.Align)
+            ValueError: If a textstyle has a
+                [fpdf.Align](https://py-pdf.github.io/fpdf2/fpdf/enums.html#fpdf.enums.Align)
                 -value as left margin.
         """  # noqa: DOC502
         assert pdf.index_placeholder is not None
@@ -615,7 +617,7 @@ class TextIndexRenderer:
                     cross_ref.joined_label_path,
                 )
                 if log_level == logging.ERROR:
-                    raise RuntimeError(
+                    raise FPDF2TextindexError(
                         msg
                         % (entry.joined_label_path, cross_ref.joined_label_path)
                     )
@@ -728,7 +730,7 @@ class TextIndexRenderer:
                         f"{ref.start_id:d} has end suffix "
                         f"{ref.end_suffix!r:s}, but no end id"
                     )
-                    raise RuntimeError(msg)
+                    raise FPDF2TextindexError(msg)
                 yield separator
                 yield md_link(ref.end_suffix, f"#{ref.end_link:s}")
 
