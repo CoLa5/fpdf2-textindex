@@ -12,8 +12,8 @@
 [![Checks: flake-8, isort, mypy](https://img.shields.io/badge/Checks-flake--8,_isort,_mypy-green.svg)](https://github.com/CoLa5/fpdf2-textindex/blob/main/.pyproject.toml)
 
 [![Commitizen](https://img.shields.io/badge/Commitizen-enabled-9b1fe8.svg)](https://commitizen-tools.github.io/commitizen/)
-[![Conventional Commits](https://img.shields.io/badge/Conventional_Commits-v1.0.0-yellow.svg)](https://www.conventionalcommits.org/en/v1.0.0/)
-[![Keep a Changelog](https://img.shields.io/badge/Keep_a_Changelog-v1.1.0-orange.svg)](https://keepachangelog.com/en/1.1.0/)
+[![Conventional Commits](https://img.shields.io/badge/Conventional_Commits-v1.0.0-fa6673.svg)](https://www.conventionalcommits.org/en/v1.0.0/)
+[![Keep a Changelog](https://img.shields.io/badge/Keep_a_Changelog-v1.1.0-E05735.svg)](https://keepachangelog.com/en/1.1.0/)
 [![GitHub last commit](https://img.shields.io/github/last-commit/CoLa5/fpdf2-textindex)](https://github.com/CoLa5/fpdf2-textindex/commits/main)
 
 # fpdf2 Text Index
