@@ -532,6 +532,7 @@ class TextIndexRenderer:
         if (
             not running_in
             and entry.parent
+            and entry is entry.parent.children[-1]
             and any(
                 cr.type == CrossReferenceType.ALSO
                 for cr in entry.parent.cross_references
