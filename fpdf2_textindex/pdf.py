@@ -60,6 +60,8 @@ class FPDF(fpdf.FPDF):
     """PDF Generation Class."""
 
     if TYPE_CHECKING:
+        _concordance_file: pathlib.Path | None
+        _concordance_list: ConcordanceList | None
         _index_allow_page_insertion: bool
         _index_links: dict[str, int]
         _index_parser: TextIndexParser
@@ -112,11 +114,8 @@ class FPDF(fpdf.FPDF):
             font_cache_dir=font_cache_dir,
             enforce_compliance=enforce_compliance,
         )
+        self._concordance_file = None
         self._concordance_list = None
-        if self.CONCORDANCE_FILE is not None:
-            self._concordance_list = ConcordanceList.from_file(
-                self.CONCORDANCE_FILE
-            )
         self._index_allow_page_insertion = False
         self._index_links = {}
         self._index_parser = TextIndexParser(strict=self.STRICT_INDEX_MODE)
@@ -289,14 +288,18 @@ class FPDF(fpdf.FPDF):
             The preloaded text fragments.
         """
         if not self.in_toc_rendering and text and markdown:
-            # Load concordance list if not done in init
-            if (
-                self.CONCORDANCE_FILE is not None
-                and self._concordance_list is None
-            ):
-                self._concordance_list = ConcordanceList.from_file(
-                    self.CONCORDANCE_FILE
-                )
+            # Load concordance list
+            if self._concordance_file != self.CONCORDANCE_FILE:
+                if self.CONCORDANCE_FILE is None:
+                    self._concordance_file = None
+                    self._concordance_list = None
+                else:
+                    self._concordance_file = pathlib.Path(
+                        self.CONCORDANCE_FILE
+                    ).resolve()
+                    self._concordance_list = ConcordanceList.from_file(
+                        self._concordance_file
+                    )
             # Replace concordance entries by entry annotations
             if self._concordance_list:
                 text = self._concordance_list.parse_text(text)
