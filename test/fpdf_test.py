@@ -6,11 +6,67 @@ import pathlib
 import fpdf
 import pytest
 
-from fpdf2_textindex.interface import TextIndexEntry
-from fpdf2_textindex.pdf import FPDF
+from fpdf2_textindex import FPDF
+from fpdf2_textindex import TextIndexEntry
 from test.conftest import DATA
 from test.conftest import assert_pdf_equal
 from test.conftest import create_figure_test_cases
+
+
+@pytest.mark.parametrize(
+    ("text", "parsed_text"),
+    [
+        (
+            "Single-tap iPad or double-tapped ipad",
+            "[Single-tap](#idx0) [iPad](#idx1) or [double-tapped](#idx2) ipad",
+        )
+    ],
+)
+def test_reload_concordance_file(
+    text: str,
+    parsed_text: str,
+) -> None:
+    pdf = FPDF()
+    pdf.set_font("Helvetica", style="", size=12)
+    pdf.add_page()
+
+    # Without concordance file
+    lines = pdf.multi_cell(
+        w=pdf.epw,
+        h=pdf.font_size,
+        text=text,
+        dry_run=True,
+        markdown=True,
+        output=fpdf.enums.MethodReturnValue.LINES,
+    )
+    new_text = "\n".join(lines)
+    assert new_text == text
+
+    # With concordance file
+    pdf.CONCORDANCE_FILE = DATA / "concordance.tsv"
+    lines = pdf.multi_cell(
+        w=pdf.epw,
+        h=pdf.font_size,
+        text=text,
+        dry_run=True,
+        markdown=True,
+        output=fpdf.enums.MethodReturnValue.LINES,
+    )
+    new_text = "\n".join(lines)
+    assert new_text == parsed_text
+
+    # Without concordance file
+    pdf.CONCORDANCE_FILE = None
+    lines = pdf.multi_cell(
+        w=pdf.epw,
+        h=pdf.font_size,
+        text=text,
+        dry_run=True,
+        markdown=True,
+        output=fpdf.enums.MethodReturnValue.LINES,
+    )
+    new_text = "\n".join(lines)
+    assert new_text == text
 
 
 @pytest.mark.parametrize(
