@@ -2,31 +2,46 @@
 
 # ruff: noqa: E501, E713, RUF069, SIM102, SIM108, UP007, UP045
 
-from collections.abc import Iterator
+from collections import defaultdict
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 import re
 import types
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 import warnings
 
 from fpdf.deprecation import get_stack_level
+from fpdf.deprecation import support_deprecated_txt_arg
 from fpdf.drawing_primitives import DeviceCMYK
 from fpdf.drawing_primitives import DeviceGray
 from fpdf.drawing_primitives import DeviceRGB
 from fpdf.drawing_primitives import convert_to_device_color
 from fpdf.enums import Align
 from fpdf.enums import CharVPos
+from fpdf.enums import DocumentCompliance
+from fpdf.enums import MethodReturnValue
 from fpdf.enums import PDFResourceType
+from fpdf.enums import PageOrientation
+from fpdf.enums import TextEmphasis
 from fpdf.enums import TextMode
+from fpdf.enums import WrapMode
 from fpdf.enums import XPos
 from fpdf.enums import YPos
+from fpdf.errors import FPDFException
 from fpdf.fonts import CoreFont
 from fpdf.fonts import TTFFont
 import fpdf.fpdf
+from fpdf.fpdf import ToCPlaceholder
+from fpdf.fpdf import check_page
+from fpdf.graphics_state import StateStackType
 from fpdf.line_break import Fragment
+from fpdf.line_break import MultiLineBreak
 from fpdf.line_break import TextLine
 from fpdf.line_break import TotalPagesSubstitutionFragment
+from fpdf.outline import OutlineSection
+from fpdf.output import ResourceTypes
 from fpdf.syntax import PDFArray
+from fpdf.table import draw_box_borders
 from fpdf.unicode_script import UnicodeScript
 from fpdf.unicode_script import get_unicode_script
 from fpdf.util import FloatTolerance
@@ -77,6 +92,80 @@ class FPDF(fpdf.fpdf.FPDF):
             self._toc_inserted_pages = prev_toc_inserted_pages
             # restore writing function:
             del self._out
+
+    # Bugfix: https://github.com/py-pdf/fpdf2/issues/1840, multi-cell-md-result
+    def _join_text_lines(
+        self,
+        text_lines: list[TextLine],
+        markdown: bool = False,
+    ) -> list[str]:
+        output_lines: list[str] = []
+        if not markdown:
+            for text_line in text_lines:
+                characters: list[str] = []
+                for frag in text_line.fragments:
+                    characters.extend(frag.characters)
+                output_lines.append("".join(characters))
+        else:
+            emphasis_markers: dict[TextEmphasis, str] = {
+                TextEmphasis.NONE: "",
+                TextEmphasis.B: self.MARKDOWN_BOLD_MARKER,
+                TextEmphasis.I: self.MARKDOWN_ITALICS_MARKER,
+                TextEmphasis.U: self.MARKDOWN_UNDERLINE_MARKER,
+                TextEmphasis.S: self.MARKDOWN_STRIKETHROUGH_MARKER,
+            }
+            marker_pattern: str = "|".join(
+                re.escape(m)
+                for te, m in emphasis_markers.items()
+                if te != TextEmphasis.NONE
+            )
+            escape_pattern: re.Pattern[str] = re.compile(
+                rf"({marker_pattern:s})"
+            )
+
+            def escape(text: str) -> str:
+                return escape_pattern.sub(
+                    rf"{self.MARKDOWN_ESCAPE_CHARACTER:s}\\1", text
+                )
+
+            for text_line in text_lines:
+                text_parts: list[str] = []
+                last_emphasis: TextEmphasis = TextEmphasis.NONE
+                for frag in text_line.fragments:
+                    if markdown:
+                        next_emphasis = TextEmphasis.coerce(
+                            frag.font_style
+                            + ("U" if frag.underline else "")
+                            + ("S" if frag.strikethrough else "")
+                        )
+                        # If fragment has a link and link underline is true,
+                        # the underline marker must not be added
+                        if frag.link and self.MARKDOWN_LINK_UNDERLINE:
+                            next_emphasis &= ~TextEmphasis.U
+                        removed_emphasis = last_emphasis & ~next_emphasis
+                        for te in reversed(TextEmphasis):
+                            if removed_emphasis & te:
+                                text_parts.append(emphasis_markers[te])
+                        added_emphasis = next_emphasis & ~last_emphasis
+                        for te in TextEmphasis:
+                            if added_emphasis & te:
+                                text_parts.append(emphasis_markers[te])
+                        last_emphasis = next_emphasis
+                    text = "".join(frag.characters)
+                    # NOTE: Currently, markdown format inside of links is not handled
+                    #       so only escape markdown markers outside of links
+                    text_parts.append(
+                        f"[{text:s}]({frag.link!s:s})"
+                        if frag.link
+                        else escape(text)
+                    )
+                next_emphasis = TextEmphasis.NONE
+                removed_emphasis = last_emphasis & ~next_emphasis
+                for te in reversed(TextEmphasis):
+                    if removed_emphasis & te:
+                        text_parts.append(emphasis_markers[te])
+                output_lines.append("".join(text_parts))
+        return output_lines
 
     def _parse_chars(self, text: str, markdown: bool) -> Iterator[Fragment]:
         if (
@@ -699,6 +788,295 @@ class FPDF(fpdf.fpdf.FPDF):
             self.y = self.h - self.b_margin
 
         return page_break_triggered
+
+    @check_page
+    @support_deprecated_txt_arg
+    def multi_cell(
+        self,
+        w: float,
+        h: Optional[float] = None,
+        text: str = "",
+        border: Literal[0, 1] | str = 0,
+        align: str | Align = Align.J,
+        fill: bool = False,
+        split_only: bool = False,  # DEPRECATED
+        link: Optional[int | str] = None,
+        ln: Literal["DEPRECATED"] = "DEPRECATED",
+        max_line_height: Optional[float] = None,
+        markdown: bool = False,
+        print_sh: bool = False,
+        new_x: str | XPos = XPos.RIGHT,
+        new_y: str | YPos = YPos.NEXT,
+        wrapmode: WrapMode = WrapMode.WORD,
+        dry_run: bool = False,
+        output: str | MethodReturnValue = MethodReturnValue.PAGE_BREAK,
+        center: bool = False,
+        padding: int | Sequence[int] | Padding = 0,
+    ) -> fpdf.fpdf.FPDF.MultiCellResult:
+        padding = Padding.new(padding)
+        wrapmode = WrapMode.coerce(wrapmode)
+
+        if split_only:
+            warnings.warn(
+                (
+                    'The parameter "split_only" is deprecated since v2.7.4.'
+                    ' Use instead dry_run=True and output="LINES".'
+                ),
+                DeprecationWarning,
+                stacklevel=get_stack_level(),
+            )
+        if dry_run or split_only:
+            with self._disable_writing():
+                return self.multi_cell(
+                    w=w,
+                    h=h,
+                    text=text,
+                    border=border,
+                    align=align,
+                    fill=fill,
+                    link=link,
+                    ln=ln,
+                    max_line_height=max_line_height,
+                    markdown=markdown,
+                    print_sh=print_sh,
+                    new_x=new_x,
+                    new_y=new_y,
+                    wrapmode=wrapmode,
+                    dry_run=False,
+                    split_only=False,
+                    output=MethodReturnValue.LINES if split_only else output,
+                    center=center,
+                    padding=padding,
+                )
+        if not self.font_family:
+            raise FPDFException(
+                "No font set, you need to call set_font() beforehand"
+            )
+        if isinstance(w, str) or isinstance(h, str):
+            raise ValueError(
+                "Parameter 'w' and 'h' must be numbers, not strings."
+                " You can omit them by passing string content with text="
+            )
+        new_x = XPos.coerce(new_x)
+        new_y = YPos.coerce(new_y)
+        if ln != "DEPRECATED":
+            # For backwards compatibility, if "ln" is used we overwrite "new_[xy]".
+            if ln == 0:
+                new_x = XPos.RIGHT
+                new_y = YPos.NEXT
+            elif ln == 1:
+                new_x = XPos.LMARGIN
+                new_y = YPos.NEXT
+            elif ln == 2:
+                new_x = XPos.LEFT
+                new_y = YPos.NEXT
+            elif ln == 3:
+                new_x = XPos.RIGHT
+                new_y = YPos.TOP
+            else:
+                raise ValueError(
+                    f'Invalid value for parameter "ln" ({ln}),'
+                    " must be an int between 0 and 3."
+                )
+            warnings.warn(
+                (
+                    'The parameter "ln" is deprecated since v2.5.2.'
+                    f" Instead of ln={ln} use new_x=XPos.{new_x.name}, new_y=YPos.{new_y.name}."
+                ),
+                DeprecationWarning,
+                stacklevel=get_stack_level(),
+            )
+        align = Align.coerce(align)
+
+        page_break_triggered = False
+
+        if h is None:
+            h = self.font_size
+
+        # If width is 0, set width to available width between margins
+        if w == 0:
+            w = self.w - self.r_margin - self.x
+
+        # Store the starting position before applying padding
+        prev_x, prev_y = self.x, self.y
+
+        # Apply padding to contents
+        # decrease maximum allowed width by padding
+        # shift the starting point by padding
+        maximum_allowed_width = w = w - padding.right - padding.left
+        clearance_margins: list[float] = []
+        # If we don't have padding on either side, we need a clearance margin.
+        if not padding.left:
+            clearance_margins.append(self.c_margin)
+        if not padding.right:
+            clearance_margins.append(self.c_margin)
+        if align != Align.X:
+            self.x += padding.left
+        self.y += padding.top
+
+        # Center overrides padding
+        if center:
+            self.x = (
+                self.w / 2
+                if align == Align.X
+                else self.l_margin + (self.epw - w) / 2
+            )
+            prev_x = self.x
+
+        # Calculate text length
+        text = self.normalize_text(text)
+        normalized_string = text.replace("\r", "")
+        styled_text_fragments = (
+            self._preload_bidirectional_text(normalized_string, markdown)
+            if self.text_shaping
+            else self._preload_font_styles(normalized_string, markdown)
+        )
+
+        prev_current_font = self.current_font
+        prev_font_style = self.font_style
+        prev_underline = self.underline
+        total_height: float = 0
+
+        text_lines: list[TextLine] = []
+        multi_line_break = MultiLineBreak(
+            styled_text_fragments,
+            maximum_allowed_width,
+            clearance_margins,
+            align=align,
+            print_sh=print_sh,
+            wrapmode=wrapmode,
+        )
+        text_line = multi_line_break.get_line()
+        while (text_line) is not None:
+            text_lines.append(text_line)
+            text_line = multi_line_break.get_line()
+
+        if (
+            not text_lines
+        ):  # ensure we display at least one cell - cf. issue #349
+            text_lines = [
+                TextLine(
+                    [],
+                    text_width=0,
+                    number_of_spaces=0,
+                    align=align,
+                    height=h,
+                    max_width=w,
+                    trailing_nl=False,
+                )
+            ]
+
+        if max_line_height is None or len(text_lines) == 1:
+            line_height = h
+        else:
+            line_height = min(h, max_line_height)
+
+        box_required = fill or border
+        page_break_triggered = False
+
+        for text_line_index, text_line in enumerate(text_lines):
+            start_of_new_page = self._perform_page_break_if_need_be(
+                h + padding.bottom
+            )
+            if start_of_new_page:
+                page_break_triggered = True
+                self.y += padding.top
+
+            if box_required and (text_line_index == 0 or start_of_new_page):
+                # estimate how many cells can fit on this page
+                top_gap = self.y  # Top padding has already been added
+                bottom_gap = padding.bottom + self.b_margin
+                lines_before_break = int(
+                    (self.h - top_gap - bottom_gap) // line_height
+                )
+                # check how many cells should be rendered
+                num_lines = min(
+                    lines_before_break, len(text_lines) - text_line_index
+                )
+                box_height = max(
+                    h - text_line_index * line_height, num_lines * line_height
+                )
+                # render the box
+                x = self.x - (w / 2 if align == Align.X else 0)
+                draw_box_borders(
+                    self,
+                    x - padding.left,
+                    self.y - padding.top,
+                    x + w + padding.right,
+                    self.y + box_height + padding.bottom,
+                    border,
+                    self.fill_color if fill else None,
+                )
+            is_last_line = text_line_index == len(text_lines) - 1
+            self._render_styled_text_line(
+                text_line,
+                h=line_height,
+                new_x=new_x if is_last_line else XPos.LEFT,
+                new_y=new_y if is_last_line else YPos.NEXT,
+                border=0,  # already rendered
+                fill=False,  # already rendered
+                link=link,
+                padding=Padding(0, padding.right, 0, padding.left),
+                prevent_font_change=markdown,
+            )
+            total_height += line_height
+            if not is_last_line and align == Align.X:
+                # prevent cumulative shift to the left
+                self.x = prev_x
+
+        if total_height < h:
+            # Move to the bottom of the multi_cell
+            if new_y == YPos.NEXT:
+                self.y += h - total_height
+            total_height = h
+
+        if page_break_triggered and new_y == YPos.TOP:
+            # When a page jump is performed and the requested y is TOP,
+            # pretend we started at the top of the text block on the new page.
+            # cf. test_multi_cell_table_with_automatic_page_break
+            prev_y = self.y
+
+        last_line = text_lines[-1]
+        if (
+            last_line
+            and last_line.trailing_nl
+            and new_y in (YPos.LAST, YPos.NEXT)
+        ):
+            # The line renderer can't handle trailing newlines in the text.
+            self.ln()
+
+        if new_y == YPos.TOP:  # We may have jumped a few lines -> reset
+            self.y = prev_y
+        elif new_y == YPos.NEXT:  # move down by bottom padding
+            self.y += padding.bottom
+
+        if markdown:
+            self.font_style = prev_font_style
+            self.current_font = prev_current_font
+            self.underline = prev_underline
+
+        if (
+            new_x == XPos.RIGHT
+        ):  # move right by right padding to align outer RHS edge
+            self.x += padding.right
+        elif (
+            new_x == XPos.LEFT
+        ):  # move left by left padding to align outer LHS edge
+            self.x -= padding.left
+
+        output = MethodReturnValue.coerce(output)
+        return_value = ()
+        if output & MethodReturnValue.PAGE_BREAK:
+            return_value += (page_break_triggered,)  # type: ignore[assignment]
+        if output & MethodReturnValue.LINES:
+            # Bugfix: https://github.com/py-pdf/fpdf2/issues/1840, multi-cell-md-result
+            output_lines = self._join_text_lines(text_lines, markdown=markdown)
+            return_value += (output_lines,)  # type: ignore[assignment]
+        if output & MethodReturnValue.HEIGHT:
+            return_value += (total_height + padding.top + padding.bottom,)  # type: ignore[assignment]
+        if len(return_value) == 1:
+            return return_value[0]
+        return return_value  # type: ignore[return-value]
 
 
 # Monkey-patch

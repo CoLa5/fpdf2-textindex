@@ -810,12 +810,7 @@ class FPDF(fpdf.FPDF):
         if output & MethodReturnValue.PAGE_BREAK:
             return_value += (page_break_triggered,)  # type: ignore[assignment]
         if output & MethodReturnValue.LINES:
-            output_lines: list[str] = []
-            for text_line in text_lines:
-                characters: list[str] = []
-                for frag in text_line.fragments:
-                    characters.extend(frag.characters)
-                output_lines.append("".join(characters))
+            output_lines = self._join_text_lines(text_lines, markdown=markdown)  # type: ignore[attr-defined]
             return_value += (output_lines,)  # type: ignore[assignment]
         if output & MethodReturnValue.HEIGHT:
             return_value += (total_height + padding.top + padding.bottom,)  # type: ignore[assignment]
