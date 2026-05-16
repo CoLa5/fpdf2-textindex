@@ -69,6 +69,46 @@ def test_reload_concordance_file(
     assert new_text == text
 
 
+@pytest.mark.parametrize("font_set", [False, True])
+def test_last_gstate_leaking_into_index(
+    font_set: bool, tmp_path: pathlib.Path
+) -> None:
+    def render_index_simple(
+        pdf: FPDF,
+        entries: list[TextIndexEntry],
+    ) -> None:
+        assert pdf.current_font_is_set_on_page == font_set
+        assert pdf.font_family == "helvetica"
+        assert pdf.font_size_pt == 12
+        assert pdf.font_style == ""
+
+    pdf = FPDF()
+    pdf.set_font("Helvetica", style="", size=12)
+
+    pdf.add_page()
+    if font_set:
+        pdf.cell(
+            w=pdf.epw,
+            h=pdf.font_size,
+            text="Index Title",
+            new_x="LMARGIN",
+            new_y="NEXT",
+        )
+    pdf.insert_index_placeholder(render_index_simple, allow_extra_pages=True)
+
+    pdf.add_page()
+    pdf.set_font("Courier", style="B", size=16)
+    pdf.cell(
+        w=pdf.epw,
+        h=pdf.font_size,
+        text="Trailing Page",
+        new_x="LMARGIN",
+        new_y="NEXT",
+    )
+    # Not comparing, just triggering assert functions in `render_index_simple`
+    pdf.output(tmp_path / "textindex_last_gstate_leaking_into_toc.pdf")
+
+
 @pytest.mark.parametrize(
     ("msg", "text", "parsed_text", "entries", "warn_msg"),
     list(create_figure_test_cases()),

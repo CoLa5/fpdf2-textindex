@@ -1,6 +1,5 @@
 """FPDF-Support for Text Index."""
 
-from collections import defaultdict
 from collections.abc import Callable, Sequence
 import os
 import pathlib
@@ -14,7 +13,6 @@ from fpdf.enums import Align
 from fpdf.enums import DocumentCompliance
 from fpdf.enums import MethodReturnValue
 from fpdf.enums import OutputIntentSubType
-from fpdf.enums import PDFResourceType
 from fpdf.enums import PageOrientation
 from fpdf.enums import WrapMode
 from fpdf.enums import XPos
@@ -24,13 +22,13 @@ from fpdf.errors import PDFAComplianceError
 from fpdf.fonts import TTFFont
 from fpdf.fpdf import ToCPlaceholder
 from fpdf.fpdf import check_page
+from fpdf.graphics_state import StateStackType
 from fpdf.line_break import Fragment
 from fpdf.line_break import MultiLineBreak
 from fpdf.line_break import TextLine
 from fpdf.linearization import LinearizedOutputProducer
 from fpdf.output import OutputProducer
 from fpdf.output import PDFICCProfile
-from fpdf.output import ResourceTypes
 from fpdf.table import draw_box_borders
 from fpdf.unicode_script import get_unicode_script
 from fpdf.util import Padding
@@ -63,6 +61,7 @@ class FPDF(fpdf.FPDF):
         _concordance_file: pathlib.Path | None
         _concordance_list: ConcordanceList | None
         _index_allow_page_insertion: bool
+        _index_gstate: StateStackType | None
         _index_links: dict[str, int]
         _index_parser: TextIndexParser
         index_placeholder: IndexPlaceholder | None
@@ -117,6 +116,7 @@ class FPDF(fpdf.FPDF):
         self._concordance_file = None
         self._concordance_list = None
         self._index_allow_page_insertion = False
+        self._index_gstate = None
         self._index_links = {}
         self._index_parser = TextIndexParser(strict=self.STRICT_INDEX_MODE)
         self.index_placeholder: IndexPlaceholder | None = None
@@ -161,111 +161,39 @@ class FPDF(fpdf.FPDF):
                 cross_ref.location = link_locations[cross_ref.link]
 
     def _insert_index(self) -> None:
-        # NOTE: Text Index reuses functionality of ToC
-
-        # Collect links locations and add them to entries
-        self._set_index_link_locations()
-
-        # Doc has been closed but we want to write to self.pages[self.page]
-        # instead of self.buffer:
+        # NOTE: Text index reuses functionality of ToC
         indexp = self.index_placeholder
         assert indexp is not None
-        prev_page, prev_y = self.page, self.y
-        prev_toc_placeholder = self.toc_placeholder
+        # Collect links locations and add them to entries
+        self._set_index_link_locations()
+        # Replace ToC placeholder by index placeholder
         prev_toc_allow_page_insertion = self._toc_allow_page_insertion
-
-        self.page, self.y = indexp.start_page, indexp.y
+        self._toc_allow_page_insertion = self._index_allow_page_insertion
+        assert self._index_gstate is not None
+        prev_toc_gstate = self._toc_gstate  # type: ignore[has-type]
+        self._toc_gstate = self._index_gstate
+        prev_toc_inserted_pages = self._toc_inserted_pages
+        self._toc_inserted_pages = 0
+        prev_toc_placeholder = self.toc_placeholder
         self.toc_placeholder = ToCPlaceholder(
-            lambda pdf, outlines: None,
-            indexp.start_page,
-            indexp.y,
-            indexp.page_orientation,
+            # Ignore outline and instead use text index entries
+            render_function=lambda pdf, _: indexp.render_function(
+                pdf,  # type: ignore[arg-type]
+                pdf._index_parser.entries,  # type: ignore[attr-defined]
+            ),
+            start_page=indexp.start_page,
+            y=indexp.y,
+            page_orientation=indexp.page_orientation,
             pages=indexp.pages,
             reset_page_indices=indexp.reset_page_indices,
         )
-        self._toc_allow_page_insertion = self._index_allow_page_insertion
-        # flag rendering ToC for page breaking function
-        self.in_toc_rendering = True
-        # Reset toc inserted counter to 0
-        self._toc_inserted_pages = 0
-        self._set_orientation(indexp.page_orientation, self.dw_pt, self.dh_pt)
-        indexp.render_function(self, self._index_parser.entries)
-        self.in_toc_rendering = False  # set ToC rendering flag off
-        expected_final_page = indexp.start_page + indexp.pages - 1
-        if (
-            self.page != expected_final_page
-            and not self._index_allow_page_insertion
-        ):
-            too = "many" if self.page > expected_final_page else "few"
-            error_msg = (
-                f"The rendering function passed to "
-                f"'FPDF.insert_index_placeholder' triggered too {too:s} page "
-                f"breaks: ToC ended on page {self.page:d} while it was "
-                f"expected to span exactly {indexp.pages:d} pages"
-            )
-            raise FPDF2TextindexError(error_msg)
-        if self._toc_inserted_pages:
-            # Generating final page footer after more pages were inserted:
-            self._render_footer()
-            # We need to reorder the pages, because some new pages have been
-            # inserted in the Index, but they have been inserted at the end of
-            # self.pages:
-            new_pages = [
-                self.pages.pop(len(self.pages))
-                for _ in range(self._toc_inserted_pages)
-            ]
-            new_pages = list(reversed(new_pages))
-            indices_remap: dict[int, int] = {}
-            for page_index in range(
-                indexp.start_page + 1, self.pages_count + len(new_pages) + 1
-            ):
-                if page_index in self.pages:
-                    new_pages.append(self.pages.pop(page_index))
-                page = self.pages[page_index] = new_pages.pop(0)
-                # Fix page indices:
-                indices_remap[page.index()] = page_index
-                page.set_index(page_index)
-                # Fix page labels:
-                if indexp.reset_page_indices is False:
-                    page.get_page_label().st = page_index  # type: ignore[union-attr]
-            assert len(new_pages) == 0, f"#new_pages: {len(new_pages)}"
-            # Fix links:
-            for dest in self.links.values():
-                assert dest.page_number is not None
-                new_index = indices_remap.get(dest.page_number)
-                if new_index is not None:
-                    dest.page_number = new_index
-            # Fix outline:
-            for section in self._outline:
-                new_index = indices_remap.get(section.page_number)
-                if new_index is not None:
-                    section.dest = section.dest.replace(page=new_index)
-                    section.page_number = new_index
-                    if section.struct_elem:
-                        # pylint: disable=protected-access
-                        section.struct_elem._page_number = (  # pyright: ignore[reportPrivateUsage]
-                            new_index
-                        )
-            # Fix resource catalog:
-            resources_per_page = self._resource_catalog.resources_per_page
-            new_resources_per_page: dict[
-                tuple[int, PDFResourceType], set[ResourceTypes]
-            ] = defaultdict(set)
-            for (
-                page_number,
-                resource_type,
-            ), resource in resources_per_page.items():
-                key = (
-                    indices_remap.get(page_number, page_number),
-                    resource_type,
-                )
-                new_resources_per_page[key] = resource
-            self._resource_catalog.resources_per_page = new_resources_per_page
-
+        # Insert index
+        self._insert_table_of_contents()
+        # Reset ToC variables
         self._toc_allow_page_insertion = prev_toc_allow_page_insertion
-        self._toc_inserted_pages = 0
+        self._toc_gstate = prev_toc_gstate
+        self._toc_inserted_pages = prev_toc_inserted_pages
         self.toc_placeholder = prev_toc_placeholder
-        self.page, self.y = prev_page, prev_y
 
     def _preload_font_styles(
         self,
@@ -420,6 +348,7 @@ class FPDF(fpdf.FPDF):
             reset_page_indices,
         )
         self._index_allow_page_insertion = allow_extra_pages
+        self._index_gstate = self._get_current_graphics_state()
         for _ in range(pages):
             self._perform_page_break()
 
