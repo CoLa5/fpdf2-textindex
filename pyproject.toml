@@ -117,10 +117,18 @@ md_report_exclude_outcomes = ["skipped"]
 md_report_flavor = "github"
 
 [tool.ruff]
+fix = true
 line-length = 80
 indent-width = 4
 target-version = "py310"
-fix = true
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+indent-style = "space"
+line-ending = "lf"
+quote-style = "double"
+skip-magic-trailing-comma = false
 
 [tool.ruff.lint]
 preview = true
@@ -167,6 +175,9 @@ extend-ignore = [
 fixable = ["ALL"]
 unfixable = []
 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
 # Source: https://github.com/PyCQA/isort/blob/main/isort/profiles.py#L22
 [tool.ruff.lint.isort]
 case-sensitive = true
@@ -179,17 +190,6 @@ order-by-type = false
 
 [tool.ruff.lint.per-file-ignores]
 "test/**" = ["D", "DOC"]  # Do not require docstrings in tests
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
-docstring-code-format = true
-docstring-code-line-length = "dynamic"
 
 [tool.typos.files]
 extend-exclude = ["requirements-dev.txt"]
