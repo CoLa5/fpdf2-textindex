@@ -60,6 +60,25 @@ class FPDF(fpdf.fpdf.FPDF):
     )
     _MARKDOWN_LINK_TEXT_UNESCAPE = re.compile(r"\\([\[\]])")
 
+    def __init__(
+        self,
+        orientation: str | PageOrientation = PageOrientation.PORTRAIT,
+        unit: str | float = "mm",
+        format: str | tuple[float, float] = "A4",
+        font_cache_dir: Literal["DEPRECATED"] = "DEPRECATED",
+        *,
+        enforce_compliance: str | DocumentCompliance | None = None,
+    ) -> None:
+        super().__init__(
+            orientation=orientation,
+            unit=unit,
+            format=format,
+            font_cache_dir=font_cache_dir,
+            enforce_compliance=enforce_compliance,
+        )
+        # BUGFIX: https://github.com/py-pdf/fpdf2/issues/1837, bug-toc-rendering
+        self._toc_gstate: Optional[StateStackType] = None
+
     # BUGFIX: https://github.com/py-pdf/fpdf2/issues/1807, dry-run-in-toc
     @contextmanager
     def _disable_writing(self) -> Iterator[None]:
@@ -92,6 +111,97 @@ class FPDF(fpdf.fpdf.FPDF):
             self._toc_inserted_pages = prev_toc_inserted_pages
             # restore writing function:
             del self._out
+
+    def _insert_table_of_contents(self) -> None:
+        # Doc has been closed but we want to write to self.pages[self.page] instead of self.buffer:
+        tocp = self.toc_placeholder
+        assert tocp is not None
+        prev_page, prev_y = self.page, self.y
+        self.page, self.y = tocp.start_page, tocp.y
+        # BUGFIX: https://github.com/py-pdf/fpdf2/issues/1807, bug-toc-rendering
+        # Set gstate to toc page
+        assert self._toc_gstate is not None
+        assert not self._is_current_graphics_state_nested()
+        cur_gstate = self._pop_local_stack()
+        self._push_local_stack(new=self._toc_gstate)
+        # flag rendering ToC for page breaking function
+        self.in_toc_rendering = True
+        self._set_orientation(tocp.page_orientation, self.dw_pt, self.dh_pt)
+        tocp.render_function(self, self._outline)
+        self.in_toc_rendering = False  # set ToC rendering flag off
+        expected_final_page = tocp.start_page + tocp.pages - 1
+        if (
+            self.page != expected_final_page
+            and not self._toc_allow_page_insertion
+        ):
+            too = "many" if self.page > expected_final_page else "few"
+            error_msg = f"The rendering function passed to FPDF.insert_toc_placeholder triggered too {too} page breaks: "
+            error_msg += f"ToC ended on page {self.page} while it was expected to span exactly {tocp.pages} pages"
+            raise FPDFException(error_msg)
+        if self._toc_inserted_pages:
+            # Generating final page footer after more pages were inserted:
+            self._render_footer()
+            # We need to reorder the pages, because some new pages have been inserted in the ToC,
+            # but they have been inserted at the end of self.pages:
+            new_pages = [
+                self.pages.pop(len(self.pages))
+                for _ in range(self._toc_inserted_pages)
+            ]
+            new_pages = list(reversed(new_pages))
+            indices_remap: dict[int, int] = {}
+            for page_index in range(
+                tocp.start_page + 1, self.pages_count + len(new_pages) + 1
+            ):
+                if page_index in self.pages:
+                    new_pages.append(self.pages.pop(page_index))
+                page = self.pages[page_index] = new_pages.pop(0)
+                # Fix page indices:
+                indices_remap[page.index()] = page_index
+                page.set_index(page_index)
+                # Fix page labels:
+                if tocp.reset_page_indices is False:
+                    page.get_page_label().st = page_index  # type: ignore[union-attr]
+            assert len(new_pages) == 0, f"#new_pages: {len(new_pages)}"
+            # Fix links:
+            for dest in self.links.values():
+                assert dest.page_number is not None
+                new_index = indices_remap.get(dest.page_number)
+                if new_index is not None:
+                    dest.page_number = new_index
+            # Fix outline:
+            for section in self._outline:
+                new_index = indices_remap.get(section.page_number)
+                if new_index is not None:
+                    section.dest = section.dest.replace(page=new_index)
+                    section.page_number = new_index
+                    if section.struct_elem:
+                        # pylint: disable=protected-access
+                        section.struct_elem._page_number = (  # pyright: ignore[reportPrivateUsage]
+                            new_index
+                        )
+            # Fix resource catalog:
+            resources_per_page = self._resource_catalog.resources_per_page
+            new_resources_per_page: dict[
+                tuple[int, PDFResourceType], set[ResourceTypes]
+            ] = defaultdict(set)
+            for (
+                page_number,
+                resource_type,
+            ), resource in resources_per_page.items():
+                key = (
+                    indices_remap.get(page_number, page_number),
+                    resource_type,
+                )
+                new_resources_per_page[key] = resource
+            self._resource_catalog.resources_per_page = new_resources_per_page
+        # BUGFIX: https://github.com/py-pdf/fpdf2/issues/1807, bug-toc-rendering
+        # Reset gstate (after rendering of footer)
+        while self._is_current_graphics_state_nested():
+            self._pop_local_stack()
+        self._pop_local_stack()
+        self._push_local_stack(cur_gstate)
+        # Reset page and y
+        self.page, self.y = prev_page, prev_y
 
     # Bugfix: https://github.com/py-pdf/fpdf2/issues/1840, multi-cell-md-result
     def _join_text_lines(
@@ -788,6 +898,39 @@ class FPDF(fpdf.fpdf.FPDF):
             self.y = self.h - self.b_margin
 
         return page_break_triggered
+
+    @check_page
+    def insert_toc_placeholder(
+        self,
+        render_toc_function: Callable[[fpdf.FPDF, list[OutlineSection]], None],
+        pages: int = 1,
+        allow_extra_pages: bool = False,
+        reset_page_indices: bool = True,
+    ) -> None:
+        if pages < 1:
+            raise ValueError(
+                f"'pages' parameter must be equal or greater than 1: {pages}"
+            )
+        if not callable(render_toc_function):
+            raise TypeError(
+                f"The first argument must be a callable, got: {type(render_toc_function)}"
+            )
+        if self.toc_placeholder:
+            raise FPDFException(
+                "A placeholder for the table of contents has already been defined"
+                f" on page {self.toc_placeholder.start_page}"
+            )
+        self.toc_placeholder = ToCPlaceholder(
+            render_toc_function,
+            self.page,
+            self.y,
+            self.cur_orientation,
+            pages,
+            reset_page_indices,
+        )
+        self._toc_allow_page_insertion = allow_extra_pages
+        for _ in range(pages):
+            self._perform_page_break()
 
     @check_page
     @support_deprecated_txt_arg
