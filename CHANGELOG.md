@@ -13,6 +13,8 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
 ### Added
 
+- Save gstate when inserting index and improve hook of inserting index (_cf._ [#5](https://github.com/CoLa5/fpdf2-textindex/issues/5))
+- Enable to change concordance file
 - Add proper error class `FPDF2TextindexError`
 - Make interface a proper submodule and make children and cross-references always sorted when inserting
 
@@ -22,6 +24,8 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
 ### Fixed
 
+- Merge [fpdf2 [#1837](https://github.com/CoLa5/fpdf2-textindex/issues/1837)](https://github.com/py-pdf/fpdf2/pull/1837)
+- Merge [fpdf2 [#1844](https://github.com/CoLa5/fpdf2-textindex/issues/1844)](https://github.com/py-pdf/fpdf2/pull/1844)
 - Fix double printing of SEE ALSO references [#3](https://github.com/CoLa5/fpdf2-textindex/issues/3)
 - Fix log level in concordance to debug to make it less noisy
 
