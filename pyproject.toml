@@ -41,11 +41,12 @@ dependencies = [
 dev = [
   "commitizen==4.10.0",
   "cz-keep-a-changelog-plugin",
+  "mypy>=2.1.0",
   "pre-commit>=4.6.0",
   "pytest>=8.4.2",
   "pytest-cov>=7.1.0",
   "pytest-md-report>=0.7.0",
-  "ruff>=0.15.11",
+  "ruff>=0.15.13",
 ]
 docs = [
   "pdoc>=16.0.0",
