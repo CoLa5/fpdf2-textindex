@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Iterable, Iterator
 import contextlib
 import dataclasses
 import logging
@@ -20,8 +21,6 @@ from fpdf2_textindex.md_emphasis import MDEmphasis
 from fpdf2_textindex.utils import md_link
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
-
     from fpdf2_textindex.interface import CrossReference
     from fpdf2_textindex.interface import TextIndexEntryP
     from fpdf2_textindex.pdf import FPDF
