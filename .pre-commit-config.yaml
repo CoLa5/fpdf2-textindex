@@ -35,8 +35,6 @@ repos:
       - id: uv-export
         args:
           ["--frozen", "--no-dev", "--output-file=requirements.txt", "--quiet"]
-      - id: uv-export
-        args: ["--frozen", "--output-file=requirements-dev.txt", "--quiet"]
 
   - repo: https://github.com/tsvikas/sync-with-uv
     rev: v0.5.0
@@ -48,11 +46,11 @@ repos:
     hooks:
       - id: commitizen
         additional_dependencies:
-          - "git+https://github.com/CoLa5/cz-keep-a-changelog-plugin.git@0.0.3"
+          - cz-keep-a-changelog-plugin==0.0.5
         stages: [commit-msg]
       - id: commitizen-branch
         additional_dependencies:
-          - "git+https://github.com/CoLa5/cz-keep-a-changelog-plugin.git@0.0.3"
+          - cz-keep-a-changelog-plugin==0.0.5
         stages: [pre-push]
 
   - repo: https://github.com/rhysd/actionlint

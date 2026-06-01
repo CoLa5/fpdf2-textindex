@@ -8,7 +8,7 @@ license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 
 authors = [
-  { name = "Corvin Lasogga", email = "c.lasogga@gmail.com" }
+  { name = "Corvin Lasogga (@CoLa5)" }
 ]
 
 keywords = ["pdf", "library", "markdown", "index", "textindex"]
@@ -40,16 +40,19 @@ dependencies = [
 [dependency-groups]
 dev = [
   "commitizen==4.10.0",
-  "cz-keep-a-changelog-plugin",
+  "cz-keep-a-changelog-plugin>=0.0.5",
   "mypy>=2.1.0",
   "pre-commit>=4.6.0",
-  "pytest>=8.4.2",
-  "pytest-cov>=7.1.0",
-  "pytest-md-report>=0.7.0",
+  "pre-commit-uv>=4.2.1",
   "ruff>=0.15.13",
 ]
 docs = [
   "pdoc>=16.0.0",
+]
+test = [
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "pytest-md-report>=0.8.0",
 ]
 
 [project.urls]
@@ -205,6 +208,3 @@ name = "testpypi"
 url = "https://test.pypi.org/simple/"
 publish-url = "https://test.pypi.org/legacy/"
 explicit = true
-
-[tool.uv.sources]
-cz-keep-a-changelog-plugin = { git = "https://github.com/CoLa5/cz-keep-a-changelog-plugin", rev = "0.0.3" }

@@ -55,5 +55,5 @@ runs:
         if [ "${{ inputs.docs }}" = "true" ]; then
           uv sync --locked --all-extras --group docs
         else
-          uv sync --locked --all-extras --dev
+          uv sync --locked --all-extras --group test --dev
         fi
