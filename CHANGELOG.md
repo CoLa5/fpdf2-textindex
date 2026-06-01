@@ -13,6 +13,7 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
 ### Added
 
+- Guard type-only imports by `TYPE_CHECKING`
 - Save gstate when inserting index and improve hook of inserting index (_cf._ [#5](https://github.com/CoLa5/fpdf2-textindex/issues/5))
 - Enable to change concordance file
 - Add proper error class `FPDF2TextindexError`
@@ -20,10 +21,13 @@ and this project adheres to [PEP 440](https://peps.python.org/pep-0440/).
 
 ### Changed
 
+- Remove `__repr__` from `CrossReference`
 - Improve comment
 
 ### Fixed
 
+- Fix the missing import of Iterable
+- Fix the double printing of same cross references (same label path)
 - Merge [fpdf2 #1837](https://github.com/py-pdf/fpdf2/pull/1837)
 - Merge [fpdf2 #1844](https://github.com/py-pdf/fpdf2/pull/1844)
 - Fix double printing of SEE ALSO references [#3](https://github.com/CoLa5/fpdf2-textindex/issues/3)
