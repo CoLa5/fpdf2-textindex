@@ -3,12 +3,14 @@
 from collections.abc import Iterator, Mapping
 import logging
 import re
-from typing import Final, Literal
+from typing import Final, Literal, TYPE_CHECKING
 
 from fpdf2_textindex.constants import LOGGER
 from fpdf2_textindex.interface import Alias
 from fpdf2_textindex.interface import LabelPath
-from fpdf2_textindex.interface import LabelPathT
+
+if TYPE_CHECKING:
+    from fpdf2_textindex.interface import LabelPathT
 
 
 class AliasRegistry(Mapping[str, Alias]):
@@ -40,7 +42,7 @@ class AliasRegistry(Mapping[str, Alias]):
     def __repr__(self) -> str:
         return f"{type(self).__name__:s}({len(self):d} aliases)"
 
-    def define(self, name: str, label_path: LabelPathT) -> None:
+    def define(self, name: str, label_path: "LabelPathT") -> None:
         """Defines an alias.
 
         Args:
@@ -74,7 +76,7 @@ class AliasRegistry(Mapping[str, Alias]):
 
     def define_or_replace_from_label_path(
         self,
-        label_path: LabelPathT,
+        label_path: "LabelPathT",
         label: str | None,
         content: str,
         alias_name: str | None,

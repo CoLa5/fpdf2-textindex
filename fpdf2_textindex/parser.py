@@ -1,6 +1,7 @@
 """Text Index Parser."""
 
-from collections.abc import Iterable, Iterator
+from __future__ import annotations
+
 import itertools
 import logging
 import re
@@ -13,13 +14,16 @@ from fpdf2_textindex.errors import FPDF2TextindexError
 from fpdf2_textindex.interface import Alias
 from fpdf2_textindex.interface import CrossReferenceType
 from fpdf2_textindex.interface import LabelPath
-from fpdf2_textindex.interface import LabelPathT
-from fpdf2_textindex.interface import LinkLocation
 from fpdf2_textindex.interface import TextIndexEntry
 from fpdf2_textindex.md_emphasis import MDEmphasis
 from fpdf2_textindex.utils import insert_at_match
 from fpdf2_textindex.utils import remove_match_from_str
 from fpdf2_textindex.utils import remove_quotes
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+
+    from fpdf2_textindex.interface import LabelPathT
 
 
 class TextIndexParser:
@@ -72,7 +76,6 @@ class TextIndexParser:
         """
         self._alias_reg = AliasRegistry()
         self._enabled = True
-        self._link_locations: dict[str, LinkLocation] = {}
         self._directive_id = -1
         self._root = TextIndexEntry(label="root")
         self._strict = bool(strict)

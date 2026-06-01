@@ -1,5 +1,7 @@
 """FPDF-Support for Text Index."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Sequence
 import os
 import pathlib
@@ -10,7 +12,6 @@ import fpdf
 from fpdf.deprecation import get_stack_level
 from fpdf.deprecation import support_deprecated_txt_arg
 from fpdf.enums import Align
-from fpdf.enums import DocumentCompliance
 from fpdf.enums import MethodReturnValue
 from fpdf.enums import OutputIntentSubType
 from fpdf.enums import PageOrientation
@@ -22,8 +23,6 @@ from fpdf.errors import PDFAComplianceError
 from fpdf.fonts import TTFFont
 from fpdf.fpdf import ToCPlaceholder
 from fpdf.fpdf import check_page
-from fpdf.graphics_state import StateStackType
-from fpdf.line_break import Fragment
 from fpdf.line_break import MultiLineBreak
 from fpdf.line_break import TextLine
 from fpdf.linearization import LinearizedOutputProducer
@@ -37,16 +36,22 @@ from fpdf.util import builtin_srgb2014_bytes
 from fpdf2_textindex import constants as const
 from fpdf2_textindex.concordance import ConcordanceList
 from fpdf2_textindex.errors import FPDF2TextindexError
-from fpdf2_textindex.interface import LabelPathT
 from fpdf2_textindex.interface import LinkLocation
 from fpdf2_textindex.interface import TextIndexEntry
 from fpdf2_textindex.parser import TextIndexParser
+
+if TYPE_CHECKING:
+    from fpdf.enums import DocumentCompliance
+    from fpdf.graphics_state import StateStackType
+    from fpdf.line_break import Fragment
+
+    from fpdf2_textindex.interface import LabelPathT
 
 
 class IndexPlaceholder(NamedTuple):
     """Index Placeholder."""
 
-    render_function: Callable[["FPDF", list["TextIndexEntry"]], None]
+    render_function: Callable[[FPDF, list[TextIndexEntry]], None]
     start_page: int
     y: float
     page_orientation: str | PageOrientation
@@ -119,7 +124,7 @@ class FPDF(fpdf.FPDF):
         self._index_gstate = None
         self._index_links = {}
         self._index_parser = TextIndexParser(strict=self.STRICT_INDEX_MODE)
-        self.index_placeholder: IndexPlaceholder | None = None
+        self.index_placeholder = None
         """Index placeholder. Defaults to ``None``."""
 
     def _set_index_link_locations(self) -> None:
@@ -265,7 +270,8 @@ class FPDF(fpdf.FPDF):
             The text index entry.
         """
         entry = self._index_parser.entry_at_label_path(label_path, create=True)
-        assert isinstance(entry, TextIndexEntry)
+        if TYPE_CHECKING:
+            assert isinstance(entry, TextIndexEntry)
         entry.sort_key = sort_key
         return entry
 
@@ -287,7 +293,7 @@ class FPDF(fpdf.FPDF):
     @check_page
     def insert_index_placeholder(
         self,
-        render_index_function: Callable[["FPDF", list[TextIndexEntry]], None],
+        render_index_function: Callable[[FPDF, list[TextIndexEntry]], None],
         *,
         pages: int = 1,
         allow_extra_pages: bool = False,
