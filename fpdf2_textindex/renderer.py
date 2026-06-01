@@ -595,9 +595,16 @@ class TextIndexRenderer:
         yield f"{cross_ref_type_str:s} "
 
         i = 0
+        last_cross_ref: CrossReference | None = None
         for cross_ref in entry.cross_references:
             if cross_ref.type != cross_ref_type:
                 continue
+            if (
+                last_cross_ref
+                and last_cross_ref.label_path == cross_ref.label_path
+            ):
+                continue
+            last_cross_ref = cross_ref
 
             # Try to find cross referenced entry
             cross_ref_entry = self._entry_at_label_path(

@@ -294,6 +294,39 @@ def create_see_test_cases() -> Iterator[tuple[str, str, list[str]]]:
             "ref-y (__see under__ [ref-x](#ent{ent_id1:d}))",
         ],
     )
+    yield (
+        "entry - same see-ref on two pages",
+        "ref-x{^}\f"
+        "[entry see-ref]{^see-1|ref-x}\f"
+        "[entry see-ref]{^see-1|ref-x}",
+        [
+            "ref-x, [1](#idx0t)",
+            "see-1. __See__ [ref-x](#ent{ent_id0:d})",
+        ],
+    )
+    yield (
+        "entry - same subentry see-ref on two pages",
+        "ref-x{^}\f"
+        "[entry - subentry see-ref]{^see-2>see-3|ref-x}\f"
+        "[entry - subentry see-ref]{^see-2>see-3|ref-x}",
+        [
+            "ref-x, [1](#idx0t)",
+            "see-2",
+            "see-3 (__see__ [ref-x](#ent{ent_id0:d}))",
+        ],
+    )
+    yield (
+        "entry - same sub-subentry see-ref on two pages",
+        "ref-x{^}\f"
+        "[entry - sub-subentry see-ref]{^see-4>see-5>see-6|ref-x}\f"
+        "[entry - sub-subentry see-ref]{^see-4>see-5>see-6|ref-x}",
+        [
+            "ref-x, [1](#idx0t)",
+            "see-4",
+            "see-5",
+            "see-6 (__see__ [ref-x](#ent{ent_id0:d}))",
+        ],
+    )
 
 
 @pytest.mark.parametrize(
@@ -497,6 +530,42 @@ def create_see_also_test_cases() -> Iterator[tuple[str, str, list[str]]]:
             "ref-y, [1](#idx0t)",
             "see-also-0",
             "ref-y, [2](#idx1t). __See also under__ [ref-x](#ent{ent_id1:d})",
+        ],
+    )
+    yield (
+        "entry - same also-ref on two pages",
+        "ref-x{^}\f"
+        "[entry also-ref]{^see-also-1|+ref-x}\f"
+        "[entry also-ref]{^see-also-1|+ref-x}",
+        [
+            "ref-x, [1](#idx0t)",
+            "see-also-1, [2](#idx1t), [3](#idx2t). "
+            "__See also__ [ref-x](#ent{ent_id0:d})",
+        ],
+    )
+    yield (
+        "entry - same subentry also-ref on two pages",
+        "ref-x{^}\f"
+        "[entry - subentry also-ref]{^see-also-2>see-also-3|+ref-x}\f"
+        "[entry - subentry also-ref]{^see-also-2>see-also-3|+ref-x}",
+        [
+            "ref-x, [1](#idx0t)",
+            "see-also-2",
+            "see-also-3, [2](#idx1t), [3](#idx2t). "
+            "__See also__ [ref-x](#ent{ent_id0:d})",
+        ],
+    )
+    yield (
+        "entry - same sub-subentry also-ref on two pages",
+        "ref-x{^}\f"
+        "[entry - sub-subentry also-ref]{^see-also-4>see-also-5>see-also-6|+ref-x}\f"  # noqa: E501
+        "[entry - sub-subentry also-ref]{^see-also-4>see-also-5>see-also-6|+ref-x}",  # noqa: E501
+        [
+            "ref-x, [1](#idx0t)",
+            "see-also-4",
+            "see-also-5",
+            "see-also-6, [2](#idx1t), [3](#idx2t). "
+            "__See also__ [ref-x](#ent{ent_id0:d})",
         ],
     )
 
