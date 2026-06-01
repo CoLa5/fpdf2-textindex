@@ -31,9 +31,6 @@ class CrossReference(_LabelPathABC):
         self.label_path = LabelPath(self.label_path)
         self.type = CrossReferenceType(self.type)
 
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}('{self!s:s}')"
-
     def __str__(self) -> str:
         return f"{self.type.capitalize():s} {self.joined_label_path:s}"
 
